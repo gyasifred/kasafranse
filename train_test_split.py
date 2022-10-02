@@ -10,7 +10,7 @@ if __name__ == "__main__":
     parser.add_argument(
         'filepath_2', metavar='filepath_2', help="Enter the file path of English document", type=str)
     parser.add_argument(
-        'filepath_3', metavar='filepath_3', help="Enter the file path of English document", type=str)
+        'filepath_3', metavar='filepath_3', help="Enter the file path of French document", type=str)
     parser.add_argument('--val_set', default=False, type=bool,
                         help='Pass True if validation set is required. Default = False')
     parser.add_argument('--output_dir', default= ".", type=str,

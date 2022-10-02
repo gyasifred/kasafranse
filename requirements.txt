@@ -1,0 +1,5 @@
+tensorflow-text tensorflow
+googletrans==3.1.0a0
+transformers[sentencepiece] datasets
+sacrebleu sentencepiece
+sacremoses
