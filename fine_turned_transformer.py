@@ -1,13 +1,15 @@
 import argparse
 from kasafranse.preprocessing import Preprocessing
-from kasafranse.hugging_face_utils import BuildDataset, compute_metrics
+from kasafranse.hugging_face_utils import BuildDataset
 from transformers import AutoModelForSeq2SeqLM, \
     DataCollatorForSeq2Seq,\
     Seq2SeqTrainingArguments, \
     Seq2SeqTrainer
 from transformers import AutoTokenizer
 import torch
-import evaluate
+import numpy as np
+
+from datasets import load_metric
 
 if __name__ == "__main__":
 
@@ -40,10 +42,10 @@ if __name__ == "__main__":
     parser.add_argument('--savedir', type=str,
                         help="Provide the path to save to the fineturned model")
     parser.add_argument("model_name", type=str,
-                        help="Nmae for savine the fineturend model")
+                        help="Name for savine the fineturend model")
 
     args = parser.parse_args()
-    print("MODEL PATH: " + args.save_dir)
+    print("MODEL PATH: " + args.savedir)
     print("FINED-TURNED MODEL NAME: " + args.model_name)
     print("================")
 
@@ -63,7 +65,7 @@ if __name__ == "__main__":
     model_checkpoint = pretrained_model
 
     # load the metrics
-    metric = evaluate.load("sacrebleu")
+    metric = load_metric("sacrebleu")
 
     # Load the datasets
     # Create an instance of tft preprocessing class
@@ -100,8 +102,9 @@ if __name__ == "__main__":
         targets = [ex[target_lang] for ex in examples["translation"]]
         model_inputs = tokenizer(
             inputs, max_length=max_input_length, truncation=True)
-        labels = tokenizer(text_target=targets,
-                           max_length=max_target_length, truncation=True)
+        with tokenizer.as_target_tokenizer():
+            labels = tokenizer(
+                targets, max_length=max_target_length, truncation=True)
         model_inputs["labels"] = labels["input_ids"]
         return model_inputs
 
@@ -110,17 +113,35 @@ if __name__ == "__main__":
         preprocess_function, batched=True)
     tokenized_val_datasets = val_dataset.map(preprocess_function, batched=True)
 
-    # set default to pytorch
-    tokenized_train_datasets.set_format("torch")
-    tokenized_val_datasets.set_format("torch")
-
     # Download model weights
     model = AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint)
 
-    # SPECIFY DEVICE TO USE GPU IF AVAILABLE
-    device = torch.device(
-        "cuda") if torch.cuda.is_available() else torch.device("cpu")
-    model.to(device)
+
+    def postprocess_text(preds, labels):
+        preds = [pred.strip() for pred in preds]
+        labels = [[label.strip()] for label in labels]
+        return preds, labels
+
+    def compute_metrics(eval_preds):
+        preds, labels = eval_preds
+        if isinstance(preds, tuple):
+            preds = preds[0]
+        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+        # Replace -100 in the labels as we can't decode them.
+        labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
+        decoded_labels = tokenizer.batch_decode(
+            labels, skip_special_tokens=True)
+        # Some simple post-processing
+        decoded_preds, decoded_labels = postprocess_text(
+            decoded_preds, decoded_labels)
+        result = metric.compute(predictions=decoded_preds,
+                                references=decoded_labels)
+        result = {"bleu": result["score"]}
+        prediction_lens = [np.count_nonzero(
+            pred != tokenizer.pad_token_id) for pred in preds]
+        result["gen_len"] = np.mean(prediction_lens)
+        result = {k: round(v, 4) for k, v in result.items()}
+        return result
 
     # provide training configs
     batch_size = batch_size
