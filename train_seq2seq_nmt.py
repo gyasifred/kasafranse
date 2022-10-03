@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # )
 
     # create training batches
-    BUFFER_SIZE =
+    BUFFER_SIZE = args.buffer_size
     BATCH_SIZE = args.batch_size
 
     # Instiante Process batch class
