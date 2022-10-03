@@ -176,11 +176,9 @@ class ProcessBatch:
     def prepare_batch(self, l1, l2):
         l1 = self.input_processor(l1)      # Output is ragged.
         l1 = l1[:, :self.max_tokens]    # Trim to MAX_TOKENS.
-        l1 = l1.to_tensor()  # Convert to 0-padded dense Tensor
-
+        
         l2 = self.output_processor(l2)
         l2 = l2[:, :(self.max_tokens+1)]
-        l2 = l2.to_tensor() 
         return l1, l2
 
     def make_batches(self, ds, BUFFER_SIZE, BATCH_SIZE):
