@@ -32,7 +32,7 @@ if __name__ == "__main__":
         "targ_lang", help="Provide the Initial of the Target Language as used in the Pretrained model.\
             Example the Target language of the pretrained model 'Helsinki-NLP/opus-mt-en-tw' is tw", type=str)
     parser.add_argument(
-        "--input_max_lenght", type=int, default=50, help="Enter the maximum length for the source language")
+        "--input_max_length", type=int, default=50, help="Enter the maximum length for the source language")
     parser.add_argument(
         "--output_max_lenght", type=int, default=50, help="Enter the maximum length for the target language")
     parser.add_argument(
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument('--savedir', type=str,
                         help="Provide the path to save to the fineturned model")
     parser.add_argument("model_name", type=str,
-                        help="Name for savine the fineturend model")
+                        help="Name for saving the fineturend model")
 
     args = parser.parse_args()
     print("MODEL PATH: " + args.savedir)

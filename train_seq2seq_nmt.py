@@ -14,18 +14,20 @@ if __name__ == "__main__":
                         help="Provide the Path to the Input language Training  Data", type=str)
     parser.add_argument("target_train_data",
                         help="Provide the Path to the Target Language Training  Data", type=str)
+    parser.add_argument("vocab_size",
+                        help="Provide the maximum vocabulary size", type=int)
     parser.add_argument(
-        "src_tokenizer", help="Provide the path to input tokenizer.", type=str)
+        "--max_length", type=int, default=50, help="Enter the maximum length fortraining sentences")
     parser.add_argument(
-        "target_tokenizer", help="Provide path to target tokenizer", type=str)
+        "--buffer_size", type=int, default=30000, help="Enter the buffer size for creating batches of data")
     parser.add_argument(
         "--batch_size", type=int, default=50, help="Give the batch size for training data")
     parser.add_argument(
-        "--d_model", type=int, default=512, help="Give the embedding dimension")
+        "--d_model", type=int, default=1024, help="Give the embedding dimension")
     parser.add_argument(
-        "--units", type=int, default=2048, help="Give the rnn units")
+        "--units", type=int, default=1024, help="Give the rnn units")
     parser.add_argument(
-        "--epoch", type=int, default=100, help="Enter the number of training epochs")
+        "--epoch", type=int, default=50, help="Enter the number of training epochs")
     parser.add_argument('--save_dir', type=str,
                         help="Provide the path to save to the fineturned model")
     parser.add_argument("model_name", type=str,
@@ -33,38 +35,49 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Load Tokenizers
+    # build  Tokenizers
+    # build TF datasets from input sentences in ALL languages
+    lines_src = tf.data.TextLineDataset(args.src_train_data)
+    lines_targ = tf.data.TextLineDataset(args.target_train_data)
+
+    # Text Vectorization
     # instaintiate ProcessTokenizer class
     tokenizer_preprocess = ProcessTokenizer()
 
-    # reload input text processor
-    input_text_processor = tokenizer_preprocess.loadtokenizer(
-        args.src_tokenizer)
+    # set maximum vocaburary size
+    max_vocab_size = args.vocab_size
 
-    # reload target text processor
-    output_text_processor = tokenizer_preprocess.loadtokenizer(
-        args.target_tokenizer)
+    # Processor for source language
+    input_text_processor = tokenizer_preprocess.build_tokenizer(
+        lines_src, max_vocab_size)
 
-    # import preprocessing class
-    # Create an instance of tft preprocessing class
-    preprocessor = Preprocessing()
+    output_text_processor = tokenizer_preprocess.build_tokenizer(
+        lines_targ, max_vocab_size)
 
-    # Read raw parallel dataset
-    inp, targ = preprocessor.read_parallel_dataset(
-        filepath_1=args.src_train_data,
-        filepath_2=args.target_train_data
-    )
+    # # import preprocessing class
+    # # Create an instance of tft preprocessing class
+    # preprocessor = Preprocessing()
+
+    # # Read raw parallel dataset
+    # inp, targ = preprocessor.read_parallel_dataset(
+    #     filepath_1=args.src_train_data,
+    #     filepath_2=args.target_train_data
+    # )
 
     # create training batches
-    BUFFER_SIZE = len(inp)
+    BUFFER_SIZE =
     BATCH_SIZE = args.batch_size
 
     # Instiante Process batch class
-    processbatches = ProcessBatch()
+    processbatches = ProcessBatch(
+        input_text_processor, output_text_processor, args.max_length)
+
+    # combine languages into single dataset
+    trained_combined = tf.data.Dataset.zip((lines_src, lines_targ))
 
     # train batches
     trained_dataset = processbatches.make_batches(
-        inp, targ, BUFFER_SIZE, BATCH_SIZE)
+        trained_combined, BUFFER_SIZE, BATCH_SIZE)
 
     # set Hyerperameters
     embedding_dim = args.d_model
@@ -98,10 +111,10 @@ if __name__ == "__main__":
     # Save model
     if args.save_dir:
         tf.saved_model.save(translate, f'{args.save_dir}/{args.model_name}',
-                        signatures={'serving_default': translate.__call__})
+                            signatures={'serving_default': translate.__call__})
     else:
         tf.saved_model.save(translate, args.model_name,
-                        signatures={'serving_default': translate.__call__})
+                            signatures={'serving_default': translate.__call__})
 
-
-    print(f'TRANSLATOR SAVE SUCESSFULLY TO DIECTORY {args.save_dir}')
+    print('TRAINING COMPLETE')
+    print(f'TRANSLATOR SAVE SUCESSFULLY TO DIRECTORY {args.save_dir}')
