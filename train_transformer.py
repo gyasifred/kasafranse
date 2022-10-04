@@ -17,15 +17,6 @@ if __name__ == "__main__":
 
     parser.add_argument("tokenizer",
                         help="Provide the Path to the Tokenizer", type=str)
-    # parser.add_argument(
-    #     "input_tokenizer", help="Provide the input tokenizer. The input tokenizer must always start with 'tokenizers.'\
-    #          followed by the inital of the language source. \
-    #         Example for english tokenizer 'tokenizers.eng',\
-    #              TWI tokenizer 'tokenizers.twi' and french tokenizer 'tokenizers.fr',\
-    #                 Generally the tokenizer object has been instaited in the script as tokenizers.\
-    #                      so you need to pass the language code as was use to build your subword tokenizer", type=str)
-    # parser.add_argument(
-    #     "output_tokenizer", help="Refer to input_tokenizer help", type=str)
     parser.add_argument(
         "--buffer_size", type=int, default=30000, help="Enter the buffer size for creating batches of data")
     parser.add_argument(
