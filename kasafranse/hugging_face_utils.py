@@ -4,6 +4,7 @@ from nltk.translate.bleu_score import sentence_bleu
 import numpy as np
 import pandas as pd
 from datasets import Dataset
+import sacrebleu
 from datasets import load_dataset
 
 preprocessor = Preprocessing()
@@ -122,3 +123,32 @@ class Bleu():
             bleu_total += bleu
 
         return f'BLEU SCORE: {bleu_total/length}'
+
+
+class fineturnedsacrebleu():
+    def __init__(self, translator, tokenizer):
+        self.translator = translator
+        self.tokenizer = tokenizer
+
+    def get_bleuscore(self, testfile, referencefile, smothingfunction=None):
+
+        # Open test file and read translate
+        preds = []
+        with open(testfile) as pred:
+            for line in pred:
+                line = line.strip()
+                line = self.translator.generate(
+                    **self.tokenizer(line, return_tensors="pt", padding=True))
+                translated = [self.tokenizer.decode(
+                    t, skip_special_tokens=True) for t in line]
+                candidate = str(translated)[1:-1][1:-1]
+                preds.append(candidate)
+
+        refs = []
+        with open(referencefile) as test:
+            for line in test:
+                line = line.strip()
+                refs.append(line)
+        refs = [refs]
+        bleu = sacrebleu.corpus_bleu(preds, refs)
+        return f'BLEU SCORE: {bleu.score}'

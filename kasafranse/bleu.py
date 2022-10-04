@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_text
 from nltk.translate.bleu_score import sentence_bleu
+import sacrebleu
 
 
 class TransformerBleu():
@@ -234,6 +235,7 @@ class GoogleAPIBleu():
 
         return f'BLEU SCORE: {bleu_total/length}'
 
+
 class TurnedModelBleu():
     def __init__(self, translator, tokenizer):
         self.translator = translator
@@ -274,7 +276,7 @@ class TurnedModelBleu():
             candidate = str(translated)[1:-1][1:-1]
             # print("Translated Text: ", candidate)
             # print("Ground Truth: ", reference[i])
-            candidate =  candidate.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+            candidate = candidate.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                 .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                 .replace(" ) ", ") ").replace(" , ", ", ").split()
             bleu = sentence_bleu(
@@ -329,3 +331,58 @@ class Seq2seqModelBleu():
             bleu_total += bleu
 
         return f'BLEU SCORE: {bleu_total/length}'
+
+
+class SacredBleu():
+    def __init__(self, translator):
+        self.translator = translator
+
+    def get_bleuscore(self, testfile, referencefile):
+        # Open test file and read translate
+        preds = []
+        with open(testfile) as pred:
+            for line in pred:
+                line = line.strip()
+                line = self.translator(line).numpy().decode("utf-8")
+                candidate = line.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
+                preds.append(candidate)
+
+        refs = []
+        with open(referencefile) as test:
+            for line in test:
+                line = line.strip()
+                refs.append(line)
+
+        refs = [refs]
+        bleu = sacrebleu.corpus_bleu(preds, refs)
+        return f'BLEU SCORE: {bleu.score}'
+
+
+class GoogleAPISacredBleu():
+    def __init__(self, translator):
+        self.translator = translator
+
+    def get_bleuscore(self, testfile, referencefile, src_lang, dest_lang):
+        # Open test file and read translate
+        preds = []
+        with open(testfile) as pred:
+            for line in pred:
+                line = line.strip()
+                line = self.translator.evaluate(
+                    line, src_key=src_lang, dest_key=dest_lang)
+                candidate = line.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
+                preds.append(candidate)
+
+        refs = []
+        with open(referencefile) as test:
+            for line in test:
+                line = line.strip()
+                refs.append(line)
+
+        refs = [refs]
+        bleu = sacrebleu.corpus_bleu(preds, refs)
+        return f'BLEU SCORE: {bleu.score}'
