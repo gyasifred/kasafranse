@@ -17,17 +17,13 @@ if __name__ == "__main__":
     parser.add_argument("vocab_size",
                         help="Provide the maximum vocabulary size", type=int)
     parser.add_argument(
-        "--max_length", type=int, default=50, help="Enter the maximum length fortraining sentences")
-    parser.add_argument(
-        "--buffer_size", type=int, default=30000, help="Enter the buffer size for creating batches of data")
-    parser.add_argument(
         "--batch_size", type=int, default=50, help="Give the batch size for training data")
     parser.add_argument(
         "--d_model", type=int, default=1024, help="Give the embedding dimension")
     parser.add_argument(
         "--units", type=int, default=1024, help="Give the rnn units")
     parser.add_argument(
-        "--epoch", type=int, default=50, help="Enter the number of training epochs")
+        "--epoch", type=int, default=20, help="Enter the number of training epochs")
     parser.add_argument('--save_dir', type=str,
                         help="Provide the path to save to the fineturned model")
     parser.add_argument("model_name", type=str,
@@ -54,30 +50,26 @@ if __name__ == "__main__":
     output_text_processor = tokenizer_preprocess.build_tokenizer(
         lines_targ, max_vocab_size)
 
-    # # import preprocessing class
-    # # Create an instance of tft preprocessing class
-    # preprocessor = Preprocessing()
+    # import preprocessing class
+    # Create an instance of tft preprocessing class
+    preprocessor = Preprocessing()
 
-    # # Read raw parallel dataset
-    # inp, targ = preprocessor.read_parallel_dataset(
-    #     filepath_1=args.src_train_data,
-    #     filepath_2=args.target_train_data
-    # )
+    # Read raw parallel dataset
+    inp, targ = preprocessor.read_parallel_dataset(
+        filepath_1=args.src_train_data,
+        filepath_2=args.target_train_data
+    )
 
     # create training batches
-    BUFFER_SIZE = args.buffer_size
+    BUFFER_SIZE = len(inp)
     BATCH_SIZE = args.batch_size
 
     # Instiante Process batch class
-    processbatches = ProcessBatch(
-        input_text_processor, output_text_processor, args.max_length)
-
-    # combine languages into single dataset
-    trained_combined = tf.data.Dataset.zip((lines_src, lines_targ))
+    processbatches = ProcessBatch()
 
     # train batches
     trained_dataset = processbatches.make_batches(
-        trained_combined, BUFFER_SIZE, BATCH_SIZE)
+        inp, targ, BUFFER_SIZE, BATCH_SIZE)
 
     # set Hyerperameters
     embedding_dim = args.d_model
