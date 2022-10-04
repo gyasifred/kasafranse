@@ -41,7 +41,7 @@ class TransformerBleu():
                 hypothesis[i]).numpy().decode("utf-8")
             print("Translated Text: ", translated_text)
             print("Ground Truth: ", reference[i])
-            candidate = translated_text.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+            candidate = translated_text.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                 .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                 .replace(" ) ", ") ").replace(" , ", ", ").split()
             bleu = np.array(sentence_bleu(
@@ -89,7 +89,7 @@ class Seq2seqBleu():
 
             #print("Translated Text: ", translated_text)
             #print("Ground Truth: ", reference[i])
-            candidate = translated_text.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+            candidate = translated_text.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                 .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                 .replace(" ) ", ") ").replace(" , ", ", ").split()
             bleu = np.array(sentence_bleu(
@@ -135,7 +135,7 @@ class GoogleBleu():
                 hypothesis[i], src_key=src_lang, dest_key=dest_lang)
             print("Translated Text: ", translated_text)
             print("Ground Truth: ", reference[i])
-            candidate = translated_text.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+            candidate = translated_text.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                 .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                 .replace(" ) ", ") ").replace(" , ", ", ").split()
             bleu = np.array(sentence_bleu(
@@ -180,7 +180,7 @@ class BleuScore():
                 hypothesis[i]).numpy().decode("utf-8")
             # print("Translated Text: ", translated_text)
             # print("Ground Truth: ", reference[i])
-            candidate = translated_text.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+            candidate = translated_text.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                 .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                 .replace(" ) ", ") ").replace(" , ", ", ").split()
             bleu = sentence_bleu(
@@ -225,7 +225,7 @@ class GoogleAPIBleu():
                 hypothesis[i], src_key=src_lang, dest_key=dest_lang)
             # print("Translated Text: ", translated_text)
             # print("Ground Truth: ", reference[i])
-            candidate = translated_text.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+            candidate = translated_text.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                 .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                 .replace(" ) ", ") ").replace(" , ", ", ").split()
             bleu = sentence_bleu(
@@ -271,10 +271,10 @@ class TurnedModelBleu():
                 **self.tokenizer(hypothesis[i], return_tensors="pt", padding=True))
             translated = [self.tokenizer.decode(
                 t, skip_special_tokens=True) for t in translated_text]
-            candidate = str(translated)[1:-1]
+            candidate = str(translated)[1:-1][1:-1]
             # print("Translated Text: ", candidate)
             # print("Ground Truth: ", reference[i])
-            candidate =  candidate.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+            candidate =  candidate.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                 .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                 .replace(" ) ", ") ").replace(" , ", ", ").split()
             bleu = sentence_bleu(
@@ -321,7 +321,7 @@ class Seq2seqModelBleu():
 
             #print("Translated Text: ", translated_text)
             #print("Ground Truth: ", reference[i])
-            candidate = translated_text.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+            candidate = translated_text.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                 .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                 .replace(" ) ", ") ").replace(" , ", ", ").split()
             bleu = sentence_bleu(

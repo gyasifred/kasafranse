@@ -1,6 +1,6 @@
 import argparse
 import tensorflow as tf
-import tensorflow_text
+import tensorflow_text as tf_text
 from kasafranse.seq2seq_model import Translate
 
 

@@ -106,21 +106,17 @@ class Bleu():
         for i in range(length):
             hypothesis[i] = hypothesis[i]
             reference[i] = reference[i]
-            groundtruth = reference[i].lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                .replace(" ) ", ") ").replace(" , ", ", ").split()
+            groundtruth = reference[i].lower().split()
             groundtruth = [groundtruth]
 
             translated_text = self.translator.generate(
                 **self.tokenizer(hypothesis[i], return_tensors="pt", padding=True))
             translated = [self.tokenizer.decode(
                 t, skip_special_tokens=True) for t in translated_text]
-            candidate = str(translated)[1:-1]
+            candidate = str(translated)[1:-1][1:-1]
             # print("Translated Text: ", candidate)
             # print("Ground Truth: ", reference[i])
-            candidate = candidate.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                .replace(" ) ", ") ").replace(" , ", ", ").split()
+            candidate = candidate.lower().split()
             bleu = sentence_bleu(
                 groundtruth, candidate, weights, smoothing_function=smothingfunction, auto_reweigh=True)
             bleu_total += bleu
