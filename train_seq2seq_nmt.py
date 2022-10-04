@@ -2,7 +2,7 @@ import argparse
 from kasafranse.seq2seq_train_utils import TrainTranslator, MaskedLoss, ProcessBatch
 from kasafranse.seq2seq_tokenizer_processing import ProcessTokenizer
 from kasafranse.preprocessing import Preprocessing
-from kasafranse.seq2seq_model import Translator, ExportTranslator
+from kasafranse.seq2seq_model import Translator
 import tensorflow as tf
 import tensorflow_text
 
@@ -95,21 +95,12 @@ if __name__ == "__main__":
         output_text_processor=output_text_processor,
     )
 
-    translator = ExportTranslator(translate)
-    # Save model
     if args.save_dir:
-
-        tf.saved_model.save(
-            translator, export_dir=f'{args.save_dir}/{args.model_name}')
+        tf.saved_model.save(translate, f'{args.save_dir}/{args.model_name}',
+                        signatures={'serving_default': translate.__call__})
     else:
-        tf.saved_model.save(translator, export_dir=args.model_name)
-
-    # if args.save_dir:
-    #     tf.saved_model.save(translate, f'{args.save_dir}/{args.model_name}',
-    #                     signatures={'serving_default': translate.__call__})
-    # else:
-    #     tf.saved_model.save(translate, args.model_name,
-    #                     signatures={'serving_default': translate.__call__})
+        tf.saved_model.save(translate, args.model_name,
+                        signatures={'serving_default': translate.__call__})
 
 
     print("Training complete")
