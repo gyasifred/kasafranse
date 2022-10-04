@@ -142,3 +142,15 @@ class Translate:
                         .replace(" ( ", " (").replace(" ) ", ") ").replace(" , ", ", ")
                     lines.append(translated_text)
             return preprocessor.writeTotxt(self.ouput, lines)
+
+
+class ExportTranslator(tf.Module):
+    def __init__(self, translator):
+        self.translator = translator
+
+    @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.string)])
+    def __call__(self, sentence):
+
+        result = self.translator(sentence)
+
+        return result
