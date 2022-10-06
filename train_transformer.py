@@ -201,7 +201,11 @@ if __name__ == "__main__":
         def __call__(self, sentence, max_length=MAX_TOKENS):
             # The input sentence is English, hence adding the `[START]` and `[END]` tokens.
             sentence = tf.convert_to_tensor([sentence])
-            sentence = self.tokenizers.src.tokenize(sentence).to_tensor()
+            sentence = self.tokenizers.src.tokenize(sentence)
+            # trim sentence greater than Max_tokens
+            sentence = sentence[:, :max_length]
+            sentence = sentence.to_tensor()
+
             encoder_input = sentence
 
             # As the output language is TWI, initialize the output with the
@@ -267,11 +271,9 @@ if __name__ == "__main__":
             attention_weights) = self.translator(sentence, max_length=MAX_TOKENS)
 
             return result
-    
 
     # SAVE MODEL
     translator = ExportTranslator(translator)
-
     if args.save_dir:
 
         tf.saved_model.save(

@@ -7,14 +7,16 @@ class ProcessBatch:
         self.output_processor = output_processor
         self.max_tokens = max_tokens
 
+    def filter_max_tokens(self,l1, l2):
+        num_tokens = tf.maximum(tf.shape(l1)[1],tf.shape(l2)[1])
+        return num_tokens < self.max_tokens
+
     def prepare_batch(self, l1, l2):
         l1 = self.input_processor.tokenize(l1)      # Output is ragged.
-        l1 = l1[:, :self.max_tokens]    # Trim to MAX_TOKENS.
         l1 = l1.to_tensor()  # Convert to 0-padded dense Tensor
 
         l2 = self.output_processor.tokenize(l2)
-        l2 = l2[:, :(self.max_tokens+1)]
-        l2 = l2[:, :-1].to_tensor()  # Drop the [END] tokens
+        l2 = l2.to_tensor()  # Drop the [END] tokens
         return l1, l2
 
     def make_batches(self, ds, BUFFER_SIZE, BATCH_SIZE):
@@ -23,6 +25,7 @@ class ProcessBatch:
             .shuffle(BUFFER_SIZE)
             .batch(BATCH_SIZE)
             .map(self.prepare_batch, tf.data.AUTOTUNE)
+            .filter(self.filter_max_tokens)
             .prefetch(buffer_size=tf.data.AUTOTUNE))
 
     def writebatch(self, batches):
