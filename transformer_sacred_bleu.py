@@ -1,5 +1,5 @@
 import argparse
-from kasafranse.bleu import sacrebleu
+from kasafranse.bleu import TransformerSacredBleu
 import tensorflow_text
 import tensorflow as tf
 
@@ -17,5 +17,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     reloaded = tf.saved_model.load(args.translator_path)
-    bleu = sacrebleu(reloaded)
+    bleu = TransformerSacredBleu(reloaded)
     print(bleu.get_bleuscore(args.test_file, args.reference))
+    

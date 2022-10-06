@@ -333,7 +333,7 @@ class Seq2seqModelBleu():
         return f'BLEU SCORE: {bleu_total/length}'
 
 
-class SacredBleu():
+class TransformerSacredBleu():
     def __init__(self, translator):
         self.translator = translator
 

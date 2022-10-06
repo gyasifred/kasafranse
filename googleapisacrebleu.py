@@ -21,12 +21,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.use_pivot == True:
-        translator = GooglePivot()
-        bleu = GoogleAPISacredBleu(translator)
+        evaluate = GooglePivot()
+        bleu = GoogleAPISacredBleu(evaluate)
         print(bleu.get_bleuscore(args.test_file,
               args.reference, args.src_key, args.dest_key))
     else:
-        translator = GoogleDirect()
-        bleu = GoogleAPISacredBleu(translator)
+        evaluate = GoogleDirect()
+        bleu = GoogleAPISacredBleu(evaluate)
         print(bleu.get_bleuscore(args.test_file,
               args.reference, args.src_key, args.dest_key))
