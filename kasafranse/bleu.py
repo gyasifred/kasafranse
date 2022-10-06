@@ -339,11 +339,12 @@ class SacredBleu():
 
     def get_bleuscore(self, testfile, referencefile):
         # Open test file and read translate
+        translator = self.translator
         preds = []
         with open(testfile) as pred:
             for line in pred:
                 line = line.strip()
-                line = self.translator(line).numpy().decode("utf-8")
+                line =translator(line).numpy().decode("utf-8")
                 candidate = line.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                     .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                     .replace(" ) ", ") ").replace(" , ", ", ")
@@ -365,12 +366,13 @@ class GoogleAPISacredBleu():
         self.translator = translator
 
     def get_bleuscore(self, testfile, referencefile, src_lang, dest_lang):
+        translator = self.translator
         # Open test file and read translate
         preds = []
         with open(testfile) as pred:
             for line in pred:
                 line = line.strip()
-                line = self.translator.evaluate(
+                line = translator.evaluate(
                     line, src_key=src_lang, dest_key=dest_lang)
                 candidate = line.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                     .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
