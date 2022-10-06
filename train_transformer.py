@@ -1,8 +1,10 @@
 import argparse
-from kasafranse.transformer_model import Transformer, Translator,\
-    ExportTranslator
+from kasafranse.transformer_model import Transformer, Translator
+from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
+from kasafranse.transformer_tokenizer import CustomTokenizer
+from kasafranse.transformer_layers import create_masks
 from kasafranse.transformer_utils import CustomSchedule, loss_function, accuracy_function,\
-    ProcessBatch
+    ProcessBatch, write_vocab_file
 import tensorflow as tf
 import tensorflow_text
 import time
@@ -42,21 +44,51 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # build tf datasets from traning and validation sentences in both languages
+    # build tf datasets
     src_train_data = tf.data.TextLineDataset(args.src_train_data)
     targ_train_data = tf.data.TextLineDataset(args.target_train_data)
 
     # combine languages into single dataset
     trained_combined = tf.data.Dataset.zip((src_train_data, targ_train_data))
 
-    # import tokenizer
-    model_named = args.tokenizer
-    tokenizers = tf.saved_model.load(model_named)
+    # Build Tokenizer
+    # set tokenizer parameters and add reserved tokens; input files already lower-cased, but
+    # lower_case option does NFD normalization, which is needed
+    bert_tokenizer_params = dict(lower_case=True)
+    reserved_tokens = ["[PAD]", "[UNK]", "[START]", "[END]"]
+    # main parameter here that could be tuned is vocab size
+    bert_vocab_args = dict(
+        # The target vocabulary size
+        vocab_size=args.vocab_size,
+        # Reserved tokens that must be included in the vocabulary
+        reserved_tokens=reserved_tokens,
+        # Arguments for `text.BertTokenizer`
+        bert_tokenizer_params=bert_tokenizer_params,
+        # Arguments for `wordpiece_vocab.wordpiece_tokenizer_learner_lib.learn`
+        learn_params={},
+    )
+    # build French vocab file (takes several mins)
+    # this is the bert_vocab module building its vocab file from the raw French sentences
+    src_vocab = bert_vocab.bert_vocab_from_dataset(
+        src_train_data,
+        **bert_vocab_args
+    )
+    targ_vocab = bert_vocab.bert_vocab_from_dataset(
+        targ_train_data,
+        **bert_vocab_args
+    )
 
-    # set input and output processors
-    input_processor = tokenizers.eng
-    output_processor = tokenizers.twi
+    # Write source and target vocabS to file
+    # use to export the tokenizer
+    write_vocab_file('src_vocab.txt', src_vocab)
+    write_vocab_file('targ_vocab.txt', targ_vocab)
 
+    # Instantiate tokenizer class
+    tokenizers = tf.Module()
+    tokenizers.src = CustomTokenizer(reserved_tokens, 'src_vocab.txt')
+    tokenizers.targ = CustomTokenizer(reserved_tokens, 'targ_vocab.txt')
+
+    # create batches of data for training
     # set MAX_TOKENS
     MAX_TOKENS = args.max_input_length
     # create training batches
@@ -65,7 +97,7 @@ if __name__ == "__main__":
 
     # Instantiate ProcessBatch class
     batch_processor = ProcessBatch(
-        input_processor, output_processor, MAX_TOKENS)
+        tokenizers.src, tokenizers.targ, MAX_TOKENS)
 
     # Create training set batches.
     train_batches = batch_processor.make_batches(
@@ -79,23 +111,22 @@ if __name__ == "__main__":
     dropout_rate = args.dropout
 
     # Instantiate  Transformer
-    train_loss = tf.keras.metrics.Mean(name='train_loss')
-    train_accuracy = tf.keras.metrics.Mean(name='train_accuracy')
-
     transformer = Transformer(
         num_layers=num_layers,
         d_model=d_model,
-        num_attention_heads=num_heads,
+        num_heads=num_heads,
         dff=dff,
-        input_vocab_size=input_processor.get_vocab_size().numpy(),
-        target_vocab_size=output_processor.get_vocab_size().numpy(),
-        dropout_rate=dropout_rate)
+        input_vocab_size=tokenizers.src.get_vocab_size().numpy(),
+        target_vocab_size=tokenizers.targ.get_vocab_size().numpy(),
+        rate=dropout_rate)
 
     # Instantiate learning rate and set optimizer
     learning_rate = CustomSchedule(d_model)
+    optimizer = tf.keras.optimizers.Adam(
+        learning_rate, beta_1=0.9, beta_2=0.98, epsilon=1e-9)
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98,
-                                         epsilon=1e-9)
+    train_loss = tf.keras.metrics.Mean(name='train_loss')
+    train_accuracy = tf.keras.metrics.Mean(name='train_accuracy')
 
     # Set up training checkpoints
     checkpoint_path = "./checkpoints/train"
@@ -109,33 +140,30 @@ if __name__ == "__main__":
 
     # Choose number of training epochs
     EPOCHS = args.epoch
+
     train_step_signature = [
-        (
-            tf.TensorSpec(shape=(None, None), dtype=tf.int64),
-            tf.TensorSpec(shape=(None, None), dtype=tf.int64)),
+        tf.TensorSpec(shape=(None, None), dtype=tf.int64),
         tf.TensorSpec(shape=(None, None), dtype=tf.int64),
     ]
-
-    # The `@tf.function` trace-compiles train_step into a TF graph for faster
+    # The @tf.function trace-compiles train_step into a TF graph for faster
     # execution. The function specializes to the precise shape of the argument
     # tensors. To avoid re-tracing due to the variable sequence lengths or variable
     # batch sizes (the last batch is smaller), use input_signature to specify
     # more generic shapes.
 
     @tf.function(input_signature=train_step_signature)
-    def train_step(inputs, labels):
-        (inp, tar_inp) = inputs
-        tar_real = labels
-
+    def train_step(inp, tar):
+        tar_inp = tar[:, :-1]
+        tar_real = tar[:, 1:]
+        enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
+            inp, tar_inp)
         with tf.GradientTape() as tape:
-            predictions, _ = transformer([inp, tar_inp],
-                                         training=True)
+            predictions, _ = transformer(
+                inp, tar_inp, True, enc_padding_mask, combined_mask, dec_padding_mask)
             loss = loss_function(tar_real, predictions)
-
         gradients = tape.gradient(loss, transformer.trainable_variables)
         optimizer.apply_gradients(
             zip(gradients, transformer.trainable_variables))
-
         train_loss(loss)
         train_accuracy(accuracy_function(tar_real, predictions))
 
@@ -143,29 +171,105 @@ if __name__ == "__main__":
     for epoch in range(EPOCHS):
         start = time.time()
 
-        train_loss.reset_states()
-        train_accuracy.reset_states()
+    train_loss.reset_states()
+    train_accuracy.reset_states()
 
-        # inp -> twi, tar -> french
-        for (batch, (inp, tar)) in enumerate(train_batches):
-            train_step(inp, tar)
+    # inp -> twi, tar -> french
+    for (batch, (inp, tar)) in enumerate(train_batches):
+        train_step(inp, tar)
 
-            if batch % 50 == 0:
-                print(
-                    f'Epoch {epoch + 1} Batch {batch} Loss {train_loss.result():.4f} Accuracy {train_accuracy.result():.4f}')
+        if batch % 50 == 0:
+            print(
+                f'Epoch {epoch + 1} Batch {batch} Loss {train_loss.result():.4f} Accuracy {train_accuracy.result():.4f}')
 
-        if (epoch + 1) % 5 == 0:
-            ckpt_save_path = ckpt_manager.save()
-            print(f'Saving checkpoint for epoch {epoch+1} at {ckpt_save_path}')
+    if (epoch + 1) % 5 == 0:
+        ckpt_save_path = ckpt_manager.save()
+        print(f'Saving checkpoint for epoch {epoch+1} at {ckpt_save_path}')
 
-        print(
-            f'Epoch {epoch + 1} Loss {train_loss.result():.4f} Accuracy {train_accuracy.result():.4f}')
+    print(
+        f'Epoch {epoch + 1} Loss {train_loss.result():.4f} Accuracy {train_accuracy.result():.4f}')
 
-        print(f'Time taken for 1 epoch: {time.time() - start:.2f} secs\n')
+    print(f'Time taken for 1 epoch: {time.time() - start:.2f} secs\n')
+
+    # translator
+    class Translator(tf.Module):
+        def __init__(self, tokenizers, transformer):
+            self.tokenizers = tokenizers
+            self.transformer = transformer
+
+        def __call__(self, sentence, max_length=MAX_TOKENS):
+            # The input sentence is English, hence adding the `[START]` and `[END]` tokens.
+            sentence = tf.convert_to_tensor([sentence])
+            sentence = self.tokenizers.src.tokenize(sentence)
+            # trim sentence greater than Max_tokens
+            sentence = sentence[:, :self.max_length]
+            sentence = sentence.to_tensor()
+
+            encoder_input = sentence
+
+            # As the output language is TWI, initialize the output with the
+            # English `[START]` token.
+            start_end = self.tokenizers.targ.tokenize([''])[0]
+            start = start_end[0][tf.newaxis]
+            end = start_end[1][tf.newaxis]
+
+            # `tf.TensorArray` is required here (instead of a Python list), so that the
+            # dynamic-loop can be traced by `tf.function`.
+            output_array = tf.TensorArray(
+                dtype=tf.int64, size=0, dynamic_size=True)
+            output_array = output_array.write(0, start)
+            output = tf.transpose(output_array.stack())
+
+            enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
+                encoder_input, output)
+
+            for i in tf.range(max_length):
+                output = tf.transpose(output_array.stack())
+
+                enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
+                    encoder_input, output)
+
+                predictions, attention_weights = self.transformer(
+                    encoder_input, output, False, enc_padding_mask, combined_mask, dec_padding_mask)
+
+                # Select the last token from the `seq_len` dimension.
+                # Shape `(batch_size, 1, vocab_size)`.
+                predictions = predictions[:, -1:, :]
+
+                predicted_id = tf.argmax(predictions, axis=-1)
+
+                # Concatenate the `predicted_id` to the output which is given to the
+                # decoder as its input.
+                output_array = output_array.write(i+1, predicted_id[0])
+
+                if predicted_id == end:
+                    break
+
+            output = tf.transpose(output_array.stack())
+            # The output shape is `(1, tokens)`.
+            text = self.tokenizers.targ.detokenize(output)[0]  # Shape: `()`.
+
+            tokens = self.tokenizers.targ.lookup(output)[0]
+            _, attention_weights = self.transformer(
+                encoder_input, output[:, :-1], False, enc_padding_mask, combined_mask, dec_padding_mask)
+
+            return text, tokens, attention_weights
 
     # Create an instance of this Translator class
-    translator = Translator(transformer, input_processor=input_processor,
-                            output_processor=output_processor, max_length=MAX_TOKENS)
+    translator = Translator(tokenizers, transformer)
+
+    # class to export translator
+    class ExportTranslator(tf.Module):
+        def __init__(self, translator):
+            self.translator = translator
+
+        @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.string)])
+        def __call__(self, sentence):
+            (result,
+             tokens,
+             attention_weights) = self.translator(sentence, max_length=MAX_TOKENS)
+
+            return result
 
     # SAVE MODEL
     translator = ExportTranslator(translator)

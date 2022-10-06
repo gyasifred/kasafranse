@@ -14,9 +14,8 @@ class ProcessBatch:
 
         l2 = self.output_processor.tokenize(l2)
         l2 = l2[:, :(self.max_tokens+1)]
-        l2_inputs = l2[:, :-1].to_tensor()  # Drop the [END] tokens
-        l2_labels = l2[:, 1:].to_tensor()   # Drop the [START] tokens
-        return (l1, l2_inputs), l2_labels
+        l2 = l2[:, :-1].to_tensor()  # Drop the [END] tokens
+        return l1, l2
 
     def make_batches(self, ds, BUFFER_SIZE, BATCH_SIZE):
         return (
@@ -47,10 +46,9 @@ class ProcessBatch:
 
 # Set learning rate schedule
 
-
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):
-        super().__init__()
+        super(CustomSchedule, self).__init__()
 
         self.d_model = d_model
         self.d_model = tf.cast(self.d_model, tf.float32)
@@ -58,7 +56,6 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         self.warmup_steps = warmup_steps
 
     def __call__(self, step):
-        step = tf.cast(step, dtype=tf.float32)
         arg1 = tf.math.rsqrt(step)
         arg2 = step * (self.warmup_steps ** -1.5)
 
@@ -88,3 +85,9 @@ def accuracy_function(real, pred):
     accuracies = tf.cast(accuracies, dtype=tf.float32)
     mask = tf.cast(mask, dtype=tf.float32)
     return tf.reduce_sum(accuracies)/tf.reduce_sum(mask)
+
+
+def write_vocab_file(filepath, vocab):
+    with open(filepath, 'w') as f:
+        for token in vocab:
+            print(token, file=f)
