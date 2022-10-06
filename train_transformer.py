@@ -16,9 +16,6 @@ if __name__ == "__main__":
                         help="Provide the Path to the Input language Training  Data", type=str)
     parser.add_argument("target_train_data",
                         help="Provide the Path to the Target Language Training  Data", type=str)
-
-    parser.add_argument("tokenizer",
-                        help="Provide the Path to the Tokenizer", type=str)
     parser.add_argument(
         "--buffer_size", type=int, default=30000, help="Enter the buffer size for creating batches of data")
     parser.add_argument(
