@@ -117,7 +117,7 @@ if __name__ == "__main__":
         dff=dff,
         input_vocab_size=tokenizers.src.get_vocab_size().numpy(),
         target_vocab_size=tokenizers.targ.get_vocab_size().numpy(),
-        pe_input=MAX_TOKENS,
+        pe_input=MAX_TOKENS, 
         pe_target=MAX_TOKENS,
         rate=dropout_rate)
 
@@ -201,8 +201,7 @@ if __name__ == "__main__":
         def __call__(self, sentence, max_length=MAX_TOKENS):
             # The input sentence is English, hence adding the `[START]` and `[END]` tokens.
             sentence = tf.convert_to_tensor([sentence])
-            sentence = sentence.to_tensor()
-            
+            sentence = self.tokenizers.src.tokenize(sentence).to_tensor()
             encoder_input = sentence
 
             # As the output language is TWI, initialize the output with the
@@ -264,10 +263,11 @@ if __name__ == "__main__":
         @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.string)])
         def __call__(self, sentence):
             (result,
-             tokens,
-             attention_weights) = self.translator(sentence, max_length=MAX_TOKENS)
+            tokens,
+            attention_weights) = self.translator(sentence, max_length=MAX_TOKENS)
 
             return result
+    
 
     # SAVE MODEL
     translator = ExportTranslator(translator)
