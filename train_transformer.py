@@ -1,5 +1,5 @@
 import argparse
-from kasafranse.transformer_model import Transformer, Translator
+from kasafranse.transformer_model import Transformer
 from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
 from kasafranse.transformer_tokenizer import CustomTokenizer
 from kasafranse.transformer_layers import create_masks
@@ -16,6 +16,8 @@ if __name__ == "__main__":
                         help="Provide the Path to the Input language Training  Data", type=str)
     parser.add_argument("target_train_data",
                         help="Provide the Path to the Target Language Training  Data", type=str)
+    parser.add_argument("--vocab_size", default=5000,
+                        help="Provide the maximum vocabulary size", type=int)
     parser.add_argument(
         "--buffer_size", type=int, default=30000, help="Enter the buffer size for creating batches of data")
     parser.add_argument(
@@ -115,6 +117,8 @@ if __name__ == "__main__":
         dff=dff,
         input_vocab_size=tokenizers.src.get_vocab_size().numpy(),
         target_vocab_size=tokenizers.targ.get_vocab_size().numpy(),
+        pe_input=MAX_TOKENS, 
+        pe_target=MAX_TOKENS,
         rate=dropout_rate)
 
     # Instantiate learning rate and set optimizer
@@ -168,25 +172,25 @@ if __name__ == "__main__":
     for epoch in range(EPOCHS):
         start = time.time()
 
-    train_loss.reset_states()
-    train_accuracy.reset_states()
+        train_loss.reset_states()
+        train_accuracy.reset_states()
 
-    # inp -> twi, tar -> french
-    for (batch, (inp, tar)) in enumerate(train_batches):
-        train_step(inp, tar)
+        # inp -> twi, tar -> french
+        for (batch, (inp, tar)) in enumerate(train_batches):
+            train_step(inp, tar)
 
-        if batch % 50 == 0:
-            print(
-                f'Epoch {epoch + 1} Batch {batch} Loss {train_loss.result():.4f} Accuracy {train_accuracy.result():.4f}')
+            if batch % 50 == 0:
+                print(
+                    f'Epoch {epoch + 1} Batch {batch} Loss {train_loss.result():.4f} Accuracy {train_accuracy.result():.4f}')
 
-    if (epoch + 1) % 5 == 0:
-        ckpt_save_path = ckpt_manager.save()
-        print(f'Saving checkpoint for epoch {epoch+1} at {ckpt_save_path}')
+        if (epoch + 1) % 5 == 0:
+            ckpt_save_path = ckpt_manager.save()
+            print(f'Saving checkpoint for epoch {epoch+1} at {ckpt_save_path}')
 
-    print(
-        f'Epoch {epoch + 1} Loss {train_loss.result():.4f} Accuracy {train_accuracy.result():.4f}')
+        print(
+            f'Epoch {epoch + 1} Loss {train_loss.result():.4f} Accuracy {train_accuracy.result():.4f}')
 
-    print(f'Time taken for 1 epoch: {time.time() - start:.2f} secs\n')
+        print(f'Time taken for 1 epoch: {time.time() - start:.2f} secs\n')
 
     # translator
     class Translator(tf.Module):
@@ -199,7 +203,7 @@ if __name__ == "__main__":
             sentence = tf.convert_to_tensor([sentence])
             sentence = self.tokenizers.src.tokenize(sentence)
             # trim sentence greater than Max_tokens
-            sentence = sentence[:, :self.max_length]
+            sentence = sentence[:, :max_length]
             sentence = sentence.to_tensor()
 
             encoder_input = sentence
@@ -263,13 +267,15 @@ if __name__ == "__main__":
         @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.string)])
         def __call__(self, sentence):
             (result,
-             tokens,
-             attention_weights) = self.translator(sentence, max_length=MAX_TOKENS)
+            tokens,
+            attention_weights) = self.translator(sentence, max_length=MAX_TOKENS)
 
             return result
+    
 
     # SAVE MODEL
     translator = ExportTranslator(translator)
+
     if args.save_dir:
 
         tf.saved_model.save(
