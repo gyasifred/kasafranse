@@ -344,7 +344,7 @@ class TransformerSacredBleu():
         with open(testfile) as pred:
             for line in pred:
                 line = line.strip()
-                line =translator(line).numpy().decode("utf-8")
+                line = translator(line).numpy().decode("utf-8")
                 candidate = line.lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                     .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                     .replace(" ) ", ") ").replace(" , ", ", ")
@@ -357,7 +357,11 @@ class TransformerSacredBleu():
                 refs.append(line)
 
         refs = [refs]
-        bleu = sacrebleu.corpus_bleu(preds, refs)
+        bleu = sacrebleu.corpus_bleu(preds, refs, smooth_method="add-k",
+                                     force=False,
+                                     lowercase=True,
+                                     tokenize="intl",
+                                     use_effective_order=True)
         return f'BLEU SCORE: {bleu.score}'
 
 
@@ -386,5 +390,9 @@ class GoogleAPISacredBleu():
                 refs.append(line)
 
         refs = [refs]
-        bleu = sacrebleu.corpus_bleu(preds, refs)
+        bleu = sacrebleu.corpus_bleu(preds, refs, smooth_method="add-k",
+                                     force=False,
+                                     lowercase=True,
+                                     tokenize="intl",
+                                     use_effective_order=True)
         return f'BLEU SCORE: {bleu.score}'

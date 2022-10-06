@@ -150,5 +150,9 @@ class fineturnedsacrebleu():
                 line = line.strip()
                 refs.append(line)
         refs = [refs]
-        bleu = sacrebleu.corpus_bleu(preds, refs)
+        bleu = sacrebleu.corpus_bleu(preds, refs,smooth_method="add-k",
+                                     force=False,
+                                     lowercase=True,
+                                     tokenize="intl",
+                                     use_effective_order=True)
         return f'BLEU SCORE: {bleu.score}'
