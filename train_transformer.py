@@ -117,8 +117,8 @@ if __name__ == "__main__":
         dff=dff,
         input_vocab_size=tokenizers.src.get_vocab_size().numpy(),
         target_vocab_size=tokenizers.targ.get_vocab_size().numpy(),
-        pe_input=MAX_TOKENS, 
-        pe_target=MAX_TOKENS,
+        pe_input=1000, 
+        pe_target=1000,
         rate=dropout_rate)
 
     # Instantiate learning rate and set optimizer
