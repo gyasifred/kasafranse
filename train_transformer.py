@@ -1,6 +1,5 @@
 import argparse
 from kasafranse.transformer_model import Transformer
-from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
 from kasafranse.transformer_tokenizer import CustomTokenizer
 from kasafranse.transformer_layers import create_masks
 from kasafranse.transformer_utils import CustomSchedule, loss_function, accuracy_function,\
@@ -45,8 +44,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # build tf datasets from traning and validation sentences in both languages
-    src_train_data = tf.data.TextLineDataset(args.src_lang_train_path)
-    targ_train_data = tf.data.TextLineDataset(args.targ_lang_train_path)
+    src_train_data = tf.data.TextLineDataset(args.src_train_data)
+    targ_train_data = tf.data.TextLineDataset(args.target_train_data)
 
     # combine languages into single dataset
     trained_combined = tf.data.Dataset.zip((src_train_data, targ_train_data))
@@ -81,7 +80,7 @@ if __name__ == "__main__":
 
     # Instantiate ProcessBatch class
     batch_processor = ProcessBatch(
-        tokenizers.src, tokenizers.targ, MAX_TOKENS)
+        input_processor, output_processor, MAX_TOKENS)
 
     # Create training set batches.
     train_batches = batch_processor.make_batches(
@@ -261,5 +260,3 @@ if __name__ == "__main__":
             translator, export_dir=f'{args.save_dir}/{args.model_name}')
     else:
         tf.saved_model.save(translator, export_dir=args.model_name)
-
-
