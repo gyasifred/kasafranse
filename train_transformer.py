@@ -16,8 +16,9 @@ if __name__ == "__main__":
                         help="Provide the Path to the Input language Training  Data", type=str)
     parser.add_argument("target_train_data",
                         help="Provide the Path to the Target Language Training  Data", type=str)
-    parser.add_argument("--vocab_size", default=5000,
-                        help="Provide the maximum vocabulary size", type=int)
+
+    parser.add_argument("tokenizer",
+                        help="Provide the Path to the Tokenizer", type=str)
     parser.add_argument(
         "--buffer_size", type=int, default=30000, help="Enter the buffer size for creating batches of data")
     parser.add_argument(
@@ -39,53 +40,37 @@ if __name__ == "__main__":
     parser.add_argument('--save_dir', type=str,
                         help="Provide the path to save to the fineturned model")
     parser.add_argument("model_name", type=str,
-                        help="Namefor saving the trained model")
+                        help="Nmae for savine the fineturend model")
 
     args = parser.parse_args()
 
-    # build tf datasets
-    src_train_data = tf.data.TextLineDataset(args.src_train_data)
-    targ_train_data = tf.data.TextLineDataset(args.target_train_data)
+    # build tf datasets from traning and validation sentences in both languages
+    src_train_data = tf.data.TextLineDataset(args.src_lang_train_path)
+    targ_train_data = tf.data.TextLineDataset(args.targ_lang_train_path)
 
     # combine languages into single dataset
     trained_combined = tf.data.Dataset.zip((src_train_data, targ_train_data))
 
-    # Build Tokenizer
-    # set tokenizer parameters and add reserved tokens; input files already lower-cased, but
-    # lower_case option does NFD normalization, which is needed
-    bert_tokenizer_params = dict(lower_case=True)
-    reserved_tokens = ["[PAD]", "[UNK]", "[START]", "[END]"]
-    # main parameter here that could be tuned is vocab size
-    bert_vocab_args = dict(
-        # The target vocabulary size
-        vocab_size=args.vocab_size,
-        # Reserved tokens that must be included in the vocabulary
-        reserved_tokens=reserved_tokens,
-        # Arguments for `text.BertTokenizer`
-        bert_tokenizer_params=bert_tokenizer_params,
-        # Arguments for `wordpiece_vocab.wordpiece_tokenizer_learner_lib.learn`
-        learn_params={},
-    )
-    # build French vocab file (takes several mins)
-    # this is the bert_vocab module building its vocab file from the raw French sentences
-    src_vocab = bert_vocab.bert_vocab_from_dataset(
-        src_train_data,
-        **bert_vocab_args
-    )
-    targ_vocab = bert_vocab.bert_vocab_from_dataset(
-        targ_train_data,
-        **bert_vocab_args
-    )
+    # import tokenizer
+    model_named = args.tokenizer
+    tokenizers = tf.saved_model.load(model_named)
 
-    # Write source and target vocabS to file
-    # use to export the tokenizer
-    write_vocab_file('src_vocab.txt', src_vocab)
-    write_vocab_file('targ_vocab.txt', targ_vocab)
+    # set input and output processors
+    input_processor = tokenizers.src
+    output_processor = tokenizers.targ
 
-    # Instantiate tokenizer class
-    tokenizers = tf.Module()
-    tokenizers.src = CustomTokenizer(reserved_tokens, 'src_vocab.txt')
-    tokenizers.targ = CustomTokenizer(reserved_tokens, 'targ_vocab.txt')
+    # set MAX_TOKENS
+    MAX_TOKENS = args.max_input_length
+    # create training batches
+    BUFFER_SIZE = args.buffer_size
+    BATCH_SIZE = args.batch_size
+
+    # Set hyperparameters for  Transformer
+    num_layers = args.num_layers
+    d_model = args.d_model
+    dff = args.dff
+    num_heads = args.heads
+    dropout_rate = args.dropout
 
     # create batches of data for training
     # set MAX_TOKENS
@@ -117,8 +102,8 @@ if __name__ == "__main__":
         dff=dff,
         input_vocab_size=tokenizers.src.get_vocab_size().numpy(),
         target_vocab_size=tokenizers.targ.get_vocab_size().numpy(),
-        pe_input=1000, 
-        pe_target=1000,
+        pe_input=2048, 
+        pe_target=2048,
         rate=dropout_rate)
 
     # Instantiate learning rate and set optimizer
@@ -276,3 +261,5 @@ if __name__ == "__main__":
             translator, export_dir=f'{args.save_dir}/{args.model_name}')
     else:
         tf.saved_model.save(translator, export_dir=args.model_name)
+
+
