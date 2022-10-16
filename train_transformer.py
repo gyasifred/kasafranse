@@ -37,9 +37,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--epoch", type=int, default=100, help="Enter the number of training epochs")
     parser.add_argument('--save_dir', type=str,
-                        help="Provide the path to save to the fineturned model")
+                        help="Provide the path to save to the trained model")
     parser.add_argument("model_name", type=str,
-                        help="Nmae for savine the fineturend model")
+                        help="Trined model name")
 
     args = parser.parse_args()
 

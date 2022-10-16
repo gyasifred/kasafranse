@@ -2,14 +2,13 @@ import argparse
 from kasafranse.preprocessing import Preprocessing
 from kasafranse.hugging_face_utils import BuildDataset
 from transformers import AutoModelForSeq2SeqLM, \
-    DataCollatorForSeq2Seq,\
-    Seq2SeqTrainingArguments, \
-    Seq2SeqTrainer
-from transformers import AutoTokenizer
+    DataCollatorForSeq2Seq, AutoTokenizer, AdamW, get_scheduler
+from accelerate import Accelerator
 import torch
+from tqdm.auto import tqdm
+from torch.utils.data import DataLoader
 import numpy as np
-
-from datasets import load_metric
+import evaluate
 
 if __name__ == "__main__":
 
@@ -32,9 +31,7 @@ if __name__ == "__main__":
         "targ_lang", help="Provide the Initial of the Target Language as used in the Pretrained model.\
             Example the Target language of the pretrained model 'Helsinki-NLP/opus-mt-en-tw' is tw", type=str)
     parser.add_argument(
-        "--input_max_length", type=int, default=50, help="Enter the maximum length for the source language")
-    parser.add_argument(
-        "--output_max_lenght", type=int, default=50, help="Enter the maximum length for the target language")
+        "--max_length", type=int, default=128, help="Enter the maximum tokens for the source and target languages")
     parser.add_argument(
         "--batch_size", type=int, default=8, help="Give the batch size for traininf")
     parser.add_argument(
@@ -56,16 +53,16 @@ if __name__ == "__main__":
     targ_lang_val_path = args.target_val_data
     src = args.src_lang
     targ = args.targ_lang
-    max_input_length = args.input_max_lenght
-    max_target_length = args.output_max_lenght
+    max_length = args.max_length
     batch_size = args.batch_size
     epoch = args.epoch
+    model_name = args.model_name
 
     # Provide the pretrained model
     model_checkpoint = pretrained_model
 
     # load the metrics
-    metric = load_metric("sacrebleu")
+    metric = evaluate.load("sacrebleu")
 
     # Load the datasets
     # Create an instance of tft preprocessing class
@@ -88,12 +85,13 @@ if __name__ == "__main__":
         src_train_data, targ_train_data, src_val_data, targ_val_data, src, targ)
 
     train_dataset, val_dataset = dataset.build()
+    print(train_dataset)
+    print()
+    print(val_dataset)
     # load tokenizer of pretrained model
     tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
 
     # Define function to preprocess the input and target data
-    max_input_length = max_input_length
-    max_target_length = max_target_length
     source_lang = src
     target_lang = targ
 
@@ -101,82 +99,118 @@ if __name__ == "__main__":
         inputs = [ex[source_lang] for ex in examples["translation"]]
         targets = [ex[target_lang] for ex in examples["translation"]]
         model_inputs = tokenizer(
-            inputs, max_length=max_input_length, truncation=True)
-        with tokenizer.as_target_tokenizer():
-            labels = tokenizer(
-                targets, max_length=max_target_length, truncation=True)
-        model_inputs["labels"] = labels["input_ids"]
+            inputs, text_target=targets, max_length=max_length, truncation=True
+        )
         return model_inputs
 
     # preprocess datasets
     tokenized_train_datasets = train_dataset.map(
-        preprocess_function, batched=True)
-    tokenized_val_datasets = val_dataset.map(preprocess_function, batched=True)
+        preprocess_function, batched=True, remove_columns=train_dataset.column_names)
+    tokenized_val_datasets = val_dataset.map(
+        preprocess_function, batched=True, remove_columns=val_dataset.column_names)
 
     # Download model weights
     model = AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint)
 
+    # instantiate a data_collator
+    data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
 
-    def postprocess_text(preds, labels):
-        preds = [pred.strip() for pred in preds]
-        labels = [[label.strip()] for label in labels]
-        return preds, labels
+    tokenized_train_datasets.set_format("torch")
+    tokenized_val_datasets.set_format("torch")
+    train_dataloader = DataLoader(
+        tokenized_train_datasets,
+        shuffle=True,
+        collate_fn=data_collator,
+        batch_size=batch_size,
+    )
+    eval_dataloader = DataLoader(
+        tokenized_val_datasets, collate_fn=data_collator, batch_size=batch_size
+    )
 
-    def compute_metrics(eval_preds):
-        preds, labels = eval_preds
-        if isinstance(preds, tuple):
-            preds = preds[0]
-        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+    # set up optimizer
+    optimizer = AdamW(model.parameters(), lr=2e-5)
+
+    # instantiate accelerator object
+    accelerator = Accelerator()
+    model, optimizer, train_dataloader, eval_dataloader = accelerator.prepare(
+        model, optimizer, train_dataloader, eval_dataloader
+    )
+
+    num_train_epochs = epoch
+    num_update_steps_per_epoch = len(train_dataloader)
+    num_training_steps = num_train_epochs * num_update_steps_per_epoch
+
+    lr_scheduler = get_scheduler(
+        "linear",
+        optimizer=optimizer,
+        num_warmup_steps=5,
+        num_training_steps=num_training_steps,
+    )
+
+    def postprocess(predictions, labels):
+        predictions = predictions.cpu().numpy()
+        labels = labels.cpu().numpy()
+
+        decoded_preds = tokenizer.batch_decode(
+            predictions, skip_special_tokens=True)
+
         # Replace -100 in the labels as we can't decode them.
         labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
         decoded_labels = tokenizer.batch_decode(
             labels, skip_special_tokens=True)
+
         # Some simple post-processing
-        decoded_preds, decoded_labels = postprocess_text(
-            decoded_preds, decoded_labels)
-        result = metric.compute(predictions=decoded_preds,
-                                references=decoded_labels)
-        result = {"bleu": result["score"]}
-        prediction_lens = [np.count_nonzero(
-            pred != tokenizer.pad_token_id) for pred in preds]
-        result["gen_len"] = np.mean(prediction_lens)
-        result = {k: round(v, 4) for k, v in result.items()}
-        return result
+        decoded_preds = [pred.strip() for pred in decoded_preds]
+        decoded_labels = [[label.strip()] for label in decoded_labels]
+        return decoded_preds, decoded_labels
 
-    # provide training configs
-    batch_size = batch_size
-    model_name = model_checkpoint.split("/")[-1]
-    training_args = Seq2SeqTrainingArguments(
-        f"{model_name}-finetuned-{source_lang}-to-{target_lang}",
-        evaluation_strategy="epoch",
-        learning_rate=2e-5,
-        per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=batch_size,
-        weight_decay=0.01,
-        save_total_limit=3,
-        num_train_epochs=epoch,
-        predict_with_generate=True
-    )
+    # provide output directory to save the model
+    output_dir = f"{args.savedir}/{model_name}"
 
-    # set data collator
-    data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
+    progress_bar = tqdm(range(num_training_steps))
 
-    # instaintiate transformer
-    trainer = Seq2SeqTrainer(
-        model,
-        training_args,
-        train_dataset=tokenized_train_datasets,
-        eval_dataset=tokenized_val_datasets,
-        data_collator=data_collator,
-        tokenizer=tokenizer,
-        compute_metrics=compute_metrics
-    )
+    for epoch in range(num_train_epochs):
+        # Training
+        model.train()
+        for batch in train_dataloader:
+            outputs = model(**batch)
+            loss = outputs.loss
+            accelerator.backward(loss)
 
-    # Begin Training
-    trainer.train()
+            optimizer.step()
+            lr_scheduler.step()
+            optimizer.zero_grad()
+            progress_bar.update(1)
 
-    # save fineturned model
-    if args.savedir:
-        trainer.save_model(f"{args.savedir}/{model_name}")
-    else:
-        trainer.save_model("{model_name}")
+        # Evaluation
+        model.eval()
+        for batch in tqdm(eval_dataloader):
+            with torch.no_grad():
+                generated_tokens = accelerator.unwrap_model(model).generate(
+                    batch["input_ids"],
+                    attention_mask=batch["attention_mask"],
+                    max_length=128,
+                )
+            labels = batch["labels"]
+
+            # Necessary to pad predictions and labels for being gathered
+            generated_tokens = accelerator.pad_across_processes(
+                generated_tokens, dim=1, pad_index=tokenizer.pad_token_id
+            )
+            labels = accelerator.pad_across_processes(labels, dim=1, pad_index=-100)
+
+            predictions_gathered = accelerator.gather(generated_tokens)
+            labels_gathered = accelerator.gather(labels)
+
+            decoded_preds, decoded_labels = postprocess(predictions_gathered, labels_gathered)
+            metric.add_batch(predictions=decoded_preds, references=decoded_labels)
+
+        results = metric.compute()
+        print(f"epoch {epoch}, BLEU score: {results['score']:.2f}")
+
+        # Save the model
+        accelerator.wait_for_everyone()
+        unwrapped_model = accelerator.unwrap_model(model)
+        unwrapped_model.save_pretrained(output_dir, save_function=accelerator.save)
+        if accelerator.is_main_process:
+            tokenizer.save_pretrained(output_dir)

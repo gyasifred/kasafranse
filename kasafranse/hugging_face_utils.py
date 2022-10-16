@@ -11,6 +11,17 @@ preprocessor = Preprocessing()
 
 
 class BuildDataset:
+    '''
+        Args:
+        train1:
+        train2:
+        val1:
+        val2:
+        lang1:
+        lang2:
+        example
+    '''
+
     def __init__(self, train1, train2, val1, val2, lang1, lang2):
         self.train1 = train1
         self.train2 = train2
@@ -32,7 +43,7 @@ class BuildDataset:
             translation.append({self.lang1: i, self.lang2: j})
 
         val = {"translation": translation}
-        val = pd.DataFrame(train)
+        val = pd.DataFrame(val)
 
         train_dataset = Dataset.from_pandas(train)
 
@@ -42,6 +53,7 @@ class BuildDataset:
 
 
 class Translate:
+
     def __init__(self, fine_turned_model, file, to_console=False, output="translate.txt"):
         self.model_name = fine_turned_model
         self.file = file
@@ -119,7 +131,8 @@ class Bleu():
             # print("Ground Truth: ", reference[i])
             candidate = candidate.lower().split()
             bleu = sentence_bleu(
-                groundtruth, candidate, weights, smoothing_function=smothingfunction, auto_reweigh=True)
+                groundtruth, candidate, weights, smoothing_function=smothingfunction,
+                auto_reweigh=True)
             bleu_total += bleu
 
         return f'BLEU SCORE: {bleu_total/length}'
@@ -150,7 +163,7 @@ class fineturnedsacrebleu():
                 line = line.strip()
                 refs.append(line)
         refs = [refs]
-        bleu = sacrebleu.corpus_bleu(preds, refs,smooth_method="add-k",
+        bleu = sacrebleu.corpus_bleu(preds, refs, smooth_method="add-k",
                                      force=False,
                                      lowercase=True,
                                      tokenize="intl",
