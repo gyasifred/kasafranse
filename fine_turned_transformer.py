@@ -85,9 +85,9 @@ if __name__ == "__main__":
         src_train_data, targ_train_data, src_val_data, targ_val_data, src, targ)
 
     train_dataset, val_dataset = dataset.build()
-    print(train_dataset)
-    print()
-    print(val_dataset)
+    # print(train_dataset)
+    # print()
+    # print(val_dataset)
     # load tokenizer of pretrained model
     tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
 
@@ -214,3 +214,6 @@ if __name__ == "__main__":
         unwrapped_model.save_pretrained(output_dir, save_function=accelerator.save)
         if accelerator.is_main_process:
             tokenizer.save_pretrained(output_dir)
+    
+
+    print("Training complete")

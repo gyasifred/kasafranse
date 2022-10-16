@@ -74,7 +74,7 @@ class Translate:
                     **tokenizer(i, return_tensors="pt", padding=True))
                 translated = [tokenizer.decode(
                     t, skip_special_tokens=True) for t in translated]
-                print(str(translated)[1:-1])
+                return str(translated)[1:-1]
 
         else:
             # Open test file and read lines
@@ -155,13 +155,13 @@ class fineturnedsacrebleu():
                 translated = [self.tokenizer.decode(
                     t, skip_special_tokens=True) for t in line]
                 candidate = str(translated)[1:-1][1:-1]
-                preds.append(candidate)
+                preds.append(candidate.lower())
 
         refs = []
         with open(referencefile) as test:
             for line in test:
                 line = line.strip()
-                refs.append(line)
+                refs.append(line.lower())
         refs = [refs]
         bleu = sacrebleu.corpus_bleu(preds, refs, smooth_method="add-k",
                                      force=False,
