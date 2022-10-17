@@ -189,7 +189,7 @@ if __name__ == "__main__":
                 generated_tokens = accelerator.unwrap_model(model).generate(
                     batch["input_ids"],
                     attention_mask=batch["attention_mask"],
-                    max_length=128,
+                    max_length= max_length,
                 )
             labels = batch["labels"]
 
