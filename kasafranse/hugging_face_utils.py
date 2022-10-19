@@ -74,7 +74,8 @@ class Translate:
                     **tokenizer(i, return_tensors="pt", padding=True))
                 translated = [tokenizer.decode(
                     t, skip_special_tokens=True) for t in translated]
-                return str(translated)[1:-1]
+                translated = str(translated)[1:-1][1:-1]
+                print(translated)
 
         else:
             # Open test file and read lines
@@ -119,16 +120,18 @@ class Bleu():
         for i in range(length):
             hypothesis[i] = hypothesis[i]
             reference[i] = reference[i]
-            groundtruth = reference[i].lower().split()
+            groundtruth = reference[i].lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                .replace(" ) ", ") ").replace(" , ", ", ").split()
             groundtruth = [groundtruth]
 
             translated_text = self.translator.generate(
                 **self.tokenizer(hypothesis[i], return_tensors="pt", padding=True))
             translated = [self.tokenizer.decode(
                 t, skip_special_tokens=True) for t in translated_text]
-            candidate = str(translated)[1:-1][1:-1]
-            # print("Translated Text: ", candidate)
-            # print("Ground Truth: ", reference[i])
+            candidate = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                .replace(" ) ", ") ").replace(" , ", ", ")
             candidate = candidate.lower().split()
             bleu = sentence_bleu(
                 groundtruth, candidate, weights, smoothing_function=smothingfunction,
@@ -154,13 +157,17 @@ class fineturnedsacrebleu():
                     **self.tokenizer(line, return_tensors="pt", padding=True))
                 translated = [self.tokenizer.decode(
                     t, skip_special_tokens=True) for t in line]
-                candidate = str(translated)[1:-1][1:-1]
+                candidate = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
                 preds.append(candidate.lower())
 
         refs = []
         with open(referencefile) as test:
             for line in test:
-                line = line.strip()
+                line = line.strip().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
                 refs.append(line.lower())
         refs = [refs]
         bleu = sacrebleu.corpus_bleu(preds, refs, smooth_method="add-k",

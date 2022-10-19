@@ -10,9 +10,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="BUILD SUBWORD TOKENIZER FOR ENGLISH FRENCH and AKAN-TWI USING TENSORFLOW  'text.BertTokenizer'")
     parser.add_argument("src_data",
-                        help="Provide the Path to the TWI texts", type=str)
+                        help="Provide the Path to the source texts", type=str)
     parser.add_argument("targ_data",
-                        help="Provide the Path to the FRENCH texts", type=str)
+                        help="Provide the Path to the target texts", type=str)
     parser.add_argument("vocab_size",
                         help="Provide the maximum vocabulary size", type=int)
     parser.add_argument("--save_dir", default=".",

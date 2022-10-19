@@ -5,8 +5,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description='ESTIMATE BLEU SCORE')
-    parser.add_argument("translator_path",
-                        help="Provide the path to the Translator", type=str)
     parser.add_argument("test_file",
                         help="Provide the file to be translated", type=str)
     parser.add_argument("reference",
