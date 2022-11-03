@@ -99,6 +99,6 @@ class Preprocessing:
         return s
     
     def writeTotxt(self,destination,data):
-        with open(destination, 'w') as f:
+        with open(f'{destination}', 'w') as f:
             for line in data:
                  f.write(f"{line}\n")

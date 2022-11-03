@@ -1,5 +1,5 @@
 import argparse
-from kasafranse.bleu import TransformerSacredBleu
+from kasafranse.transformer_model import TransformerSacredBleu
 import tensorflow_text
 import tensorflow as tf
 

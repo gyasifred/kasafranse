@@ -1,5 +1,5 @@
 import argparse
-from kasafranse.bleu import BleuScore
+from kasafranse.transformer_model import BleuScore
 from nltk.translate.bleu_score import SmoothingFunction
 import tensorflow as tf
 import tensorflow_text

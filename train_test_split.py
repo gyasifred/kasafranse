@@ -47,23 +47,23 @@ if __name__ == "__main__":
             test_twi, test_en, test_fr, test_size=0.5, random_state=42)
 
         # write the preprocess traning and test dataset to a file
-        preprocessor.writeTotxt(f'{args.output_dir}/train_twi.txt', train_twi)
-        preprocessor.writeTotxt(f'{args.output_dir}/train_en.txt', train_en)
-        preprocessor.writeTotxt(f'{args.output_dir}/test_twi.txt', test_twi)
-        preprocessor.writeTotxt(f'{args.output_dir}/test_en.txt', test_en)
-        preprocessor.writeTotxt(f'{args.output_dir}/train_fr.txt', train_fr)
-        preprocessor.writeTotxt(f'{args.output_dir}/test_fr.txt', test_fr)
-        preprocessor.writeTotxt(f'{args.output_dir}/val_fr.txt', val_fr)
-        preprocessor.writeTotxt(f'{args.output_dir}/val_tw.txt', val_twi)
-        preprocessor.writeTotxt(f'{args.output_dir}/val_en.txt', val_en)
+        preprocessor.writeTotxt(f'{args.output_dir}/train_twi', train_twi)
+        preprocessor.writeTotxt(f'{args.output_dir}/train_en', train_en)
+        preprocessor.writeTotxt(f'{args.output_dir}/test_twi', test_twi)
+        preprocessor.writeTotxt(f'{args.output_dir}/test_en', test_en)
+        preprocessor.writeTotxt(f'{args.output_dir}/train_fr', train_fr)
+        preprocessor.writeTotxt(f'{args.output_dir}/test_fr', test_fr)
+        preprocessor.writeTotxt(f'{args.output_dir}/val_fr', val_fr)
+        preprocessor.writeTotxt(f'{args.output_dir}/val_tw', val_twi)
+        preprocessor.writeTotxt(f'{args.output_dir}/val_en', val_en)
     else:
         train_twi, test_twi, train_en, test_en, train_fr, test_fr = train_test_split(
             raw_data_twi, raw_data_en, raw_data_fr, test_size=0.1, random_state=42)
 
         # write the preprocess traning and test dataset to a file
-        preprocessor.writeTotxt(f'{args.output_dir}/train_twi.txt', train_twi)
-        preprocessor.writeTotxt(f'{args.output_dir}/train_en.txt', train_en)
-        preprocessor.writeTotxt(f'{args.output_dir}/test_twi.txt', test_twi)
-        preprocessor.writeTotxt(f'{args.output_dir}/test_en.txt', test_en)
-        preprocessor.writeTotxt(f'{args.output_dir}/train_fr.txt', train_fr)
-        preprocessor.writeTotxt(f'{args.output_dir}/test_fr.txt', test_fr)
+        preprocessor.writeTotxt(f'{args.output_dir}/train_twi', train_twi)
+        preprocessor.writeTotxt(f'{args.output_dir}/train_en', train_en)
+        preprocessor.writeTotxt(f'{args.output_dir}/test_twi', test_twi)
+        preprocessor.writeTotxt(f'{args.output_dir}/test_en', test_en)
+        preprocessor.writeTotxt(f'{args.output_dir}/train_fr', train_fr)
+        preprocessor.writeTotxt(f'{args.output_dir}/test_fr', test_fr)

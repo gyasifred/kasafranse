@@ -1,6 +1,5 @@
 import argparse
-from kasafranse.bleu import GoogleAPISacredBleu
-from kasafranse.googleAPI import GoogleDirect, GooglePivot
+from kasafranse.googleAPI import GoogleDirect, GooglePivot,GoogleAPISacredBleu
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
