@@ -1,5 +1,6 @@
 tensorflow-text tensorflow
 googletrans==3.1.0a0
-transformers[sentencepiece] datasets
-sacrebleu sentencepiece
+evaluate transformers[sentencepiece]
+accelerate
+sacrebleu
 sacremoses
