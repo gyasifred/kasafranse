@@ -48,12 +48,13 @@ class BLEU():
                 groundtruth, candidate, weights, auto_reweigh=True, smoothing_function=smothingfunction))
             bleu_total += bleu
 
-        return f'2-GRAMS: {bleu_total[0]/length}', f'3-GRAMS: {bleu_total[1]/length}', f'4-GRAMS: {bleu_total[2]/length}'
+        return f'2-GRAMS: {bleu_total[0]/length:.2f}', f'3-GRAMS: {bleu_total[1]/length:.2f}', f'4-GRAMS: {bleu_total[2]/length:.2f}'
 
 
 class BleuScore():
     def __init__(self):
-      pass
+        pass
+
     def get_bleuscore(self, testfile, referencefile, smothingfunction=None):
         if type(testfile) == str and type(referencefile) == str:
             # Open test file and read lines
@@ -92,4 +93,4 @@ class BleuScore():
                 auto_reweigh=True)
             bleu_total += bleu
 
-        return f'BLEU SCORE: {bleu_total/length}'
+        return f'BLEU SCORE: {bleu_total/length:.2f}'

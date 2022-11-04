@@ -79,7 +79,7 @@ class GoogleBleu():
                 groundtruth, candidate, weights, smoothing_function=smothingfunction))
             bleu_total += bleu
 
-        return f'2-GRAMS: {bleu_total[0]/length}', f'3-GRAMS: {bleu_total[1]/length}', f'4-GRAMS: {bleu_total[2]/length}'
+        return f'2-GRAMS: {bleu_total[0]/length:.2f}', f'3-GRAMS: {bleu_total[1]/length:.2f}', f'4-GRAMS: {bleu_total[2]/length:.2f}'
 
 
 class GoogleAPIBleu():
@@ -124,7 +124,7 @@ class GoogleAPIBleu():
                 groundtruth, candidate, weights, smoothing_function=smothingfunction, auto_reweigh=True)
             bleu_total += bleu
 
-        return f'BLEU SCORE: {bleu_total/length}'
+        return f'BLEU SCORE: {bleu_total/length:.2f}'
 
 
 class GoogleAPISacredBleu():
@@ -157,4 +157,4 @@ class GoogleAPISacredBleu():
                                      lowercase=True,
                                      tokenize="intl",
                                      use_effective_order=True)
-        return f'BLEU SCORE: {bleu.score}'
+        return f'BLEU SCORE: {bleu.score:.2f}'

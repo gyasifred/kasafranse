@@ -138,7 +138,7 @@ class Bleu():
                 auto_reweigh=True)
             bleu_total += bleu
 
-        return f'BLEU SCORE: {bleu_total/length}'
+        return f'BLEU SCORE: {bleu_total/length:.2f}'
 
 
 class fineturnedsacrebleu():
@@ -175,4 +175,4 @@ class fineturnedsacrebleu():
                                      lowercase=True,
                                      tokenize="intl",
                                      use_effective_order=True)
-        return f'BLEU SCORE: {bleu.score}'
+        return f'BLEU SCORE: {bleu.score:.2f}'
