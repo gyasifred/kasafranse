@@ -195,7 +195,7 @@ if __name__ == "__main__":
                 generated_tokens = accelerator.unwrap_model(model).generate(
                     batch["input_ids"],
                     attention_mask=batch["attention_mask"],
-                    max_length= max_length,
+                    max_length=max_length,
                 )
             labels = batch["labels"]
 
@@ -203,13 +203,16 @@ if __name__ == "__main__":
             generated_tokens = accelerator.pad_across_processes(
                 generated_tokens, dim=1, pad_index=tokenizer.pad_token_id
             )
-            labels = accelerator.pad_across_processes(labels, dim=1, pad_index=-100)
+            labels = accelerator.pad_across_processes(
+                labels, dim=1, pad_index=-100)
 
             predictions_gathered = accelerator.gather(generated_tokens)
             labels_gathered = accelerator.gather(labels)
 
-            decoded_preds, decoded_labels = postprocess(predictions_gathered, labels_gathered)
-            metric.add_batch(predictions=decoded_preds, references=decoded_labels)
+            decoded_preds, decoded_labels = postprocess(
+                predictions_gathered, labels_gathered)
+            metric.add_batch(predictions=decoded_preds,
+                             references=decoded_labels)
 
         results = metric.compute()
         print(f"epoch {epoch}, BLEU score: {results['score']:.2f}")
@@ -217,9 +220,9 @@ if __name__ == "__main__":
         # Save the model
         accelerator.wait_for_everyone()
         unwrapped_model = accelerator.unwrap_model(model)
-        unwrapped_model.save_pretrained(output_dir, save_function=accelerator.save)
+        unwrapped_model.save_pretrained(
+            output_dir, save_function=accelerator.save)
         if accelerator.is_main_process:
             tokenizer.save_pretrained(output_dir)
-    
 
     print("Training complete")
