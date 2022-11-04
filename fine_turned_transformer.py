@@ -9,6 +9,8 @@ from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
 import numpy as np
 import evaluate
+import warnings
+warnings.simplefilter('ignore')
 
 if __name__ == "__main__":
 
@@ -36,6 +38,10 @@ if __name__ == "__main__":
         "--batch_size", type=int, default=8, help="Give the batch size for traininf")
     parser.add_argument(
         "--epoch", type=int, default=20, help="Enter the number of epoch for training")
+    parser.add_argument(
+        "--warmup_steps", type=int, default=5, help="Enter the number of warmup training steps")
+    parser.add_argument(
+        "--lr", type=float, default=2e-5, help="Enter thr training learning  rate")
     parser.add_argument('--savedir', type=str,
                         help="Provide the path to save to the fineturned model")
     parser.add_argument("model_name", type=str,
@@ -128,7 +134,7 @@ if __name__ == "__main__":
     )
 
     # set up optimizer
-    optimizer = AdamW(model.parameters(), lr=2e-5)
+    optimizer = AdamW(model.parameters(), lr=args.lr)
 
     # instantiate accelerator object
     accelerator = Accelerator()
@@ -143,7 +149,7 @@ if __name__ == "__main__":
     lr_scheduler = get_scheduler(
         "linear",
         optimizer=optimizer,
-        num_warmup_steps=5,
+        num_warmup_steps=args.warmup_steps,
         num_training_steps=num_training_steps,
     )
 
