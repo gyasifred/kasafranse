@@ -7,6 +7,8 @@ from kasafranse.transformer_utils import CustomSchedule, loss_function, accuracy
 import tensorflow as tf
 import tensorflow_text
 import time
+import warnings
+warnings.simplefilter('ignore')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

@@ -1,6 +1,8 @@
 import argparse
 from transformers import MarianMTModel, MarianTokenizer
 from kasafranse.hugging_face_utils import Translate
+import warnings
+warnings.simplefilter('ignore')
 
 
 if __name__ == "__main__":

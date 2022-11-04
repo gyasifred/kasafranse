@@ -3,6 +3,8 @@ import logging
 import time
 import numpy as np
 import tensorflow as tf
+import warnings
+warnings.simplefilter('ignore')
 
 import tensorflow_text
 if __name__ == "__main__":

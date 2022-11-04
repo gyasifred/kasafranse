@@ -88,7 +88,7 @@ class Translate:
                     **tokenizer(i, return_tensors="pt", padding=True))
                 translated = [tokenizer.decode(
                     t, skip_special_tokens=True) for t in translated]
-                lines.append(str(translated)[1:-1])
+                lines.append(str(translated)[1:-1][1:-1])
             return preprocessor.writeTotxt(self.output, lines)
 
 

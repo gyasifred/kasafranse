@@ -1,6 +1,9 @@
 import argparse
-from kasafranse.hugging_face_utils import fineturnedsacrebleu
+from kasafranse.hugging_face_utils import Bleu
+from nltk.translate.bleu_score import SmoothingFunction
 from transformers import MarianMTModel, MarianTokenizer
+import warnings
+warnings.simplefilter('ignore')
 
 if __name__ == "__main__":
 
@@ -16,5 +19,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     tokenizer = MarianTokenizer.from_pretrained(args.translator_path)
     model = MarianMTModel.from_pretrained(args.translator_path)
-    bleu = fineturnedsacrebleu(model, tokenizer)
-    print(bleu.get_bleuscore(args.test_file, args.reference))
+    smooth = SmoothingFunction()
+    bleu = Bleu(model, tokenizer)
+    print(bleu.get_bleuscore(args.test_file, args.reference, smooth.method7))

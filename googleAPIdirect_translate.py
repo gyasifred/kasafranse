@@ -1,6 +1,8 @@
 import argparse
 from kasafranse.googleAPI import GoogleDirect
 from kasafranse.preprocessing import Preprocessing
+import warnings
+warnings.simplefilter('ignore')
 
 
 if __name__ == "__main__":

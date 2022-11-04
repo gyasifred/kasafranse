@@ -42,8 +42,8 @@ class BLEU():
             candidate = hypothesis[i].lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                 .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                 .replace(" ) ", ") ").replace(" , ", ", ").split()
-            print("Translated Text: ", candidate)
-            print("Ground Truth: ", groundtruth)
+            # print("Translated Text: ", candidate)
+            # print("Ground Truth: ", groundtruth)
             bleu = np.array(sentence_bleu(
                 groundtruth, candidate, weights, auto_reweigh=True, smoothing_function=smothingfunction))
             bleu_total += bleu
@@ -85,8 +85,8 @@ class BleuScore():
             candidate = hypothesis[i].lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
                 .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
                 .replace(" ) ", ") ").replace(" , ", ", ").split()
-            print("Translated Text: ",candidate)
-            print("Ground Truth: ",groundtruth)
+            # print("Translated Text: ",candidate)
+            # print("Ground Truth: ",groundtruth)
             bleu = sentence_bleu(
                 groundtruth, candidate, weights, smoothing_function=smothingfunction,
                 auto_reweigh=True)

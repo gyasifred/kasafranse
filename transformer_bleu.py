@@ -3,6 +3,8 @@ from kasafranse.transformer_model import BleuScore
 from nltk.translate.bleu_score import SmoothingFunction
 import tensorflow as tf
 import tensorflow_text
+import warnings
+warnings.simplefilter('ignore')
 
 if __name__ == "__main__":
 

@@ -2,6 +2,8 @@ import argparse
 import tensorflow as tf
 import tensorflow_text
 from kasafranse.transformer_model import Translate
+import warnings
+warnings.simplefilter('ignore')
 
 
 if __name__ == "__main__":

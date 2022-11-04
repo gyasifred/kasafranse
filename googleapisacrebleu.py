@@ -1,5 +1,8 @@
 import argparse
 from kasafranse.googleAPI import GoogleDirect, GooglePivot,GoogleAPISacredBleu
+import warnings
+warnings.simplefilter('ignore')
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(

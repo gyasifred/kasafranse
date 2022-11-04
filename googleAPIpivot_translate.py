@@ -1,6 +1,8 @@
 import argparse
 from kasafranse.googleAPI import GooglePivot
 from kasafranse.preprocessing import Preprocessing
+import warnings
+warnings.simplefilter('ignore')
 
 
 if __name__ == "__main__":

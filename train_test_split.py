@@ -1,6 +1,8 @@
 from sklearn.model_selection import train_test_split
 from kasafranse.preprocessing import Preprocessing
 import argparse
+import warnings
+warnings.simplefilter('ignore')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

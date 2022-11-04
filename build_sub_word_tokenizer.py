@@ -4,6 +4,8 @@ import argparse
 from kasafranse.transformer_tokenizer import CustomTokenizer
 from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
 import tensorflow as tf
+import warnings
+warnings.simplefilter('ignore')
 
 if __name__ == "__main__":
 
