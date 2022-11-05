@@ -56,17 +56,14 @@ class Translate:
 
     def __init__(self, fine_turned_model, file, to_console=False, output="translate.txt"):
         self.model_name = fine_turned_model
-        self.file = file
-        self.to_console = to_console
-        self.output = output
 
-    def translate(self):
+    def translate(self, file, to_console=False, dir=None, output="translate.txt"):
         tokenizer = MarianTokenizer.from_pretrained(self.model_name)
         model = MarianMTModel.from_pretrained(self.model_name)
 
-        if self.to_console == True:
+        if to_console == True:
             # Open test file and read lines
-            f = open(self.file, "r")
+            f = open(file, "r")
             src_text = f.readlines()
             f.close()
             for i in src_text:
@@ -89,7 +86,7 @@ class Translate:
                 translated = [tokenizer.decode(
                     t, skip_special_tokens=True) for t in translated]
                 lines.append(str(translated)[1:-1][1:-1])
-            return preprocessor.writeTotxt(self.output, lines)
+            return preprocessor.writeTotxt(f'{dir}/{output}', lines)
 
 
 class Bleu():
@@ -146,7 +143,7 @@ class fineturnedsacrebleu():
         self.translator = translator
         self.tokenizer = tokenizer
 
-    def get_bleuscore(self, testfile, referencefile, smothingfunction=None):
+    def get_bleuscore(self, testfile, referencefile):
 
         # Open test file and read translate
         preds = []
@@ -176,3 +173,54 @@ class fineturnedsacrebleu():
                                      tokenize="intl",
                                      use_effective_order=True)
         return f'BLEU SCORE: {bleu.score:.2f}'
+
+
+class Pivot:
+    def __init__(self, translator_1, translator_2):
+        self.translator_1 = translator_1
+        self.translator_2 = translator_2
+
+    def translate(self, file, to_console=False, dir=None, output="translate.txt"):
+        tokenizer_1 = MarianTokenizer.from_pretrained(self.translator_1)
+        model_1 = MarianMTModel.from_pretrained(self.translator_1)
+        tokenizer_2 = MarianTokenizer.from_pretrained(self.translator_2)
+        model_2 = MarianMTModel.from_pretrained(self.translator_2)
+
+        if to_console == True:
+            # Open test file and read lines
+            f = open(file, "r")
+            src_text = f.readlines()
+            f.close()
+            for i in src_text:
+                translated = model_1.generate(
+                    **tokenizer_1(i, return_tensors="pt", padding=True))
+                translated = [tokenizer_1.decode(
+                    t, skip_special_tokens=True) for t in translated]
+                translated = str(translated)[1:-1][1:-1]
+                print(f'Pivot Translation: {translated}')
+                translated = model_2.generate(
+                    **tokenizer_2(translated, return_tensors="pt", padding=True))
+                translated = [tokenizer_2.decode(
+                    t, skip_special_tokens=True) for t in translated]
+                translated = str(translated)[1:-1][1:-1]
+                print(translated)
+
+        else:
+            # Open test file and read lines
+            f = open(self.file, "r")
+            src_text = f.readlines()
+            f.close()
+            lines = []
+            for i in src_text:
+                translated = model_1.generate(
+                    **tokenizer_1(i, return_tensors="pt", padding=True))
+                translated = [tokenizer_1.decode(
+                    t, skip_special_tokens=True) for t in translated]
+                translated = str(translated)[1:-1][1:-1]
+
+                translated = model_2.generate(
+                    **tokenizer_2(translated, return_tensors="pt", padding=True))
+                translated = [tokenizer_2.decode(
+                    t, skip_special_tokens=True) for t in translated]
+                lines.append(str(translated)[1:-1][1:-1])
+            return preprocessor.writeTotxt(f'{dir}/{output}', lines)

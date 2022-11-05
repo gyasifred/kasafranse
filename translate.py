@@ -1,7 +1,6 @@
 import argparse
-import tensorflow as tf
-import tensorflow_text
-from kasafranse.transformer_model import Translate
+from transformers import MarianMTModel, MarianTokenizer
+from kasafranse.hugging_face_utils import Translate
 import warnings
 warnings.simplefilter('ignore')
 
@@ -9,13 +8,15 @@ warnings.simplefilter('ignore')
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description='Translate Sentence with Transformer translator')
+        description='Translate Sentence with Fine-turned Hugging face transformer')
     parser.add_argument("translator_path",
                         help="Provide the path to the Translator", type=str)
     parser.add_argument("file",
                         help="Provide the file to be translated. This file must be a txt file", type=str)
     parser.add_argument("--output_name",
-                        help="Pass the directory and name of the final output", default="translate.txt", type=str)
+                        help="Pass the name for the final output file", default="translate.txt", type=str)
+    parser.add_argument("--dir",
+                        help="Pass the directory for the final output file", default=None, type=str)
 
     parser.add_argument("--to_console",
                         help="Specify whether to print the ouput to console or output to txt file. The default\
@@ -23,5 +24,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    evaluate = Translate(args.translator_path, args.file,args.output_name, args.to_console,)
-    evaluate.translate()
+    model_name = args.translator_path
+    evaluate = Translate(model_name)
+    evaluate.translate(args.file,
+                       args.to_console, args.dir, args.output_name)

@@ -94,3 +94,34 @@ class BleuScore():
             bleu_total += bleu
 
         return f'BLEU SCORE: {bleu_total/length:.2f}'
+
+
+class Sacrebleu():
+    def __init__(self) -> None:
+        pass
+
+    def get_bleuscore(self, testfile, referencefile):
+
+        # Open test file and read translate
+        preds = []
+        with open(testfile) as pred:
+            for line in pred:
+                line = line.strip().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
+                preds.append(line.lower())
+
+        refs = []
+        with open(referencefile) as test:
+            for line in test:
+                line = line.strip().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
+                refs.append(line.lower())
+        refs = [refs]
+        bleu = sacrebleu.corpus_bleu(preds, refs, smooth_method="add-k",
+                                     force=False,
+                                     lowercase=True,
+                                     tokenize="intl",
+                                     use_effective_order=True)
+        return f'BLEU SCORE: {bleu.score:.2f}'
