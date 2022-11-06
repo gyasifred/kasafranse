@@ -54,10 +54,10 @@ class BuildDataset:
 
 class Translate:
 
-    def __init__(self, fine_turned_model, file, to_console=False, output="translate.txt"):
+    def __init__(self, fine_turned_model):
         self.model_name = fine_turned_model
 
-    def translate(self, file, to_console=False, dir=None, output="translate.txt"):
+    def translate(self, file, to_console=False, output="translate.txt"):
         tokenizer = MarianTokenizer.from_pretrained(self.model_name)
         model = MarianMTModel.from_pretrained(self.model_name)
 
@@ -76,7 +76,7 @@ class Translate:
 
         else:
             # Open test file and read lines
-            f = open(self.file, "r")
+            f = open(file, "r")
             src_text = f.readlines()
             f.close()
             lines = []
@@ -86,7 +86,7 @@ class Translate:
                 translated = [tokenizer.decode(
                     t, skip_special_tokens=True) for t in translated]
                 lines.append(str(translated)[1:-1][1:-1])
-            return preprocessor.writeTotxt(f'{dir}/{output}', lines)
+            return preprocessor.writeTotxt(output, lines)
 
 
 class Bleu():

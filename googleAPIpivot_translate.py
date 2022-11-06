@@ -16,9 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("dest_key",
                         help="Provide the google translate API key for the destination language", type=str)
     parser.add_argument("--output_name",
-                        help="Pass the name of the final output", default="translate.txt", type=str)
-    parser.add_argument("--dir",
-                        help="Pass the directory for the final output file", default=None, type=str)
+                        help="Pass the path and name of the final output", default="translate.txt", type=str)
     parser.add_argument("--to_console",
                         help="Specify whether to print the ouput to console or output to txt file. The default\
                              False will save the output as txt to the curent directory", default=False, type=bool)
@@ -42,7 +40,7 @@ if __name__ == "__main__":
                     line, args.src_key, args.dest_key)
                 lines.append(translated_text)
 
-        preprocessor.writeTotxt(f'{args.dir}/{args.output_name}', lines)
+        preprocessor.writeTotxt(args.output_name, lines)
 
 
     
