@@ -87,7 +87,7 @@ class Translate:
                     t, skip_special_tokens=True) for t in translated]
                 lines.append(str(translated)[1:-1][1:-1])
             return preprocessor.writeTotxt(output, lines)
-
+ 
 
 class Bleu():
     def __init__(self, translator, tokenizer):
@@ -180,7 +180,7 @@ class Pivot:
         self.translator_1 = translator_1
         self.translator_2 = translator_2
 
-    def translate(self, file, to_console=False, dir=None, output="translate.txt"):
+    def translate(self, file, to_console=False, output="translate.txt"):
         tokenizer_1 = MarianTokenizer.from_pretrained(self.translator_1)
         model_1 = MarianMTModel.from_pretrained(self.translator_1)
         tokenizer_2 = MarianTokenizer.from_pretrained(self.translator_2)
@@ -207,7 +207,7 @@ class Pivot:
 
         else:
             # Open test file and read lines
-            f = open(self.file, "r")
+            f = open(file, "r")
             src_text = f.readlines()
             f.close()
             lines = []
@@ -223,4 +223,4 @@ class Pivot:
                 translated = [tokenizer_2.decode(
                     t, skip_special_tokens=True) for t in translated]
                 lines.append(str(translated)[1:-1][1:-1])
-            return preprocessor.writeTotxt(f'{dir}/{output}', lines)
+            return preprocessor.writeTotxt(output, lines)

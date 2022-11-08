@@ -16,10 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("file",
                         help="Provide the file to be translated. This file must be a txt file", type=str)
     parser.add_argument("--output_name",
-                        help="Pass the name for the final output file", default="translate.txt", type=str)
-    parser.add_argument("--dir",
-                        help="Pass the directory for the final output file", default=None, type=str)
-
+                        help="Pass the path and name for the final output file", default="translate.txt", type=str)
     parser.add_argument("--to_console",
                         help="Specify whether to print the ouput to console or output to txt file. The default\
                              False will save the output as txt to the curent directory", default=False, type=bool)
@@ -30,4 +27,4 @@ if __name__ == "__main__":
     model_2 = args.second_translator_path
     evaluate = Pivot(model_1,model_2)
     evaluate.translate(args.file,
-                       args.to_console, args.dir, args.output_name)
+                       args.to_console, args.output_name)
