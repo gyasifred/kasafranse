@@ -20,5 +20,5 @@ raw_data_en = [preprocessor.normalize_FrEn(data) for data in raw_data_en]
 raw_data_twi = [preprocessor.normalize_twi(data) for data in raw_data_twi]
 
 # write the preprocess traning and test dataset to a file
-preprocessor.writeTotxt('data/testing_en', raw_data_en)
+preprocessor.writeTotxt('data/BBC_text', raw_data_en)
 preprocessor.writeTotxt('data/testing_tw', raw_data_twi)
