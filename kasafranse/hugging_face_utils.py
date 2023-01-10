@@ -11,24 +11,24 @@ preprocessor = Preprocessing()
 
 
 class BuildDataset:
-    '''
-        Args:
-        train1:
-        train2:
-        val1:
-        val2:
-        lang1:
-        lang2:
-        example
+    
+    ''' Build hugging face dataset
+    Args:
+    src_train:
+    targ_train:
+    src_eval:
+    targ_eval:
+    src_lang_key:
+    targ_lang_key:
     '''
 
-    def __init__(self, train1, train2, val1, val2, lang1, lang2):
-        self.train1 = train1
-        self.train2 = train2
-        self.val1 = val1
-        self.val2 = val2
-        self.lang1 = lang1
-        self.lang2 = lang2
+    def __init__(self, src_train, targ_train, src_eval, targ_eval, src_lang_key, targ_lang_key):
+        self.train1 = src_train
+        self.train2 = targ_train
+        self.val1 = src_eval
+        self.val2 = targ_eval
+        self.lang1 = src_lang_key
+        self.lang2 = targ_lang_key
 
     def build(self):
         translation = []
@@ -53,9 +53,13 @@ class BuildDataset:
 
 
 class Translate:
+    '''Translate from source language to target language
+    Args:
+    mo
+    '''
 
-    def __init__(self, fine_turned_model):
-        self.model_name = fine_turned_model
+    def __init__(self, opus_mt_transformer):
+        self.model_name =opus_mt_transformer
 
     def translate(self, file, to_console=False, output="translate.txt"):
         tokenizer = MarianTokenizer.from_pretrained(self.model_name)
@@ -139,6 +143,11 @@ class Bleu():
 
 
 class fineturnedsacrebleu():
+    '''Estimate the SacreBLEU score
+    Args:
+    translator: Path to the Opus-mt transformer
+    tokenizer: Path to the opus-mt transformer tokenizer
+    '''
     def __init__(self, translator, tokenizer):
         self.translator = translator
         self.tokenizer = tokenizer
