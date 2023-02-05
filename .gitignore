@@ -1,0 +1,9 @@
+__pycache__
+bin/
+lib/
+pyvenv.cfg
+__pycache__
+share
+data/
+models/
+
