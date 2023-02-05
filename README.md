@@ -6,7 +6,7 @@ Install Kasafranse directly from online link:
 
 1. `pip install git+https://github.com/gyasifred/kasafranse`
 
-When editing Kasafranse locally, it is helpful to install from a local copy of Kasa instead:
+When editing Kasafranse locally, it is helpful to install from a local copy of Kasafranse instead:
 
 1. `git clone https://github.com/gyasifred/kasafranse`
 
