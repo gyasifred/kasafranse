@@ -17,17 +17,33 @@ constants.LANGUAGES['ak'] = 'akan'
 
 
 class GooglePivot:
+    '''Perfom Pivot Translation of source language to target language using Google Translate API
+    Args:
+    param sentences: Text to be translated
+    param src_key: Source Language key as specified by the google translate API
+    param dest_key: Target Language key as specified by the google translate API
+    param pivot_key: PivotLanguage key as specified by the google translate API
+    '''
+
     def __init__(self):
         pass
 
-    def evaluate(self, sentences, src_key, dest_key):
-        eng_text = translator.translate(sentences, src=src_key, dest='en').text
+    def evaluate(self, sentences, src_key, dest_key, pivot_key="en"):
+        eng_text = translator.translate(
+            sentences, src=src_key, dest=pivot_key).text
         output = translator.translate(eng_text, dest=dest_key).text
 
         return output
 
 
 class GoogleDirect:
+    '''Perfom Direct Translation of source language to target language using Google Translate API
+    Args:
+    param sentences: Text to be translated
+    param src_key: Source Language key as specified by the google translate API
+    param dest_key: Target Language key as specified by the google translate API
+    '''
+
     def __init__(self):
         pass
 
