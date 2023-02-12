@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='kasafranse',
-    version='0.1',
+    version='1.0',
     description='A library for Machine translation of Ghanaian language Twi',
     author='Gyasi, Frederick',
     author_email='gyasifred@gmail.com',
