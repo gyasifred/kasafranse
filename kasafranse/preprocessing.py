@@ -46,7 +46,7 @@ class Preprocessing:
                     cnt += 1
 
             return lang_1, lang_2, lang_3
-            
+
         else:
             # read first language data
             lang_1 = []
@@ -97,8 +97,9 @@ class Preprocessing:
         s = re.sub(r'[^a-zA-Z.!?]+', r' ', s)
         s = re.sub(r'\s+', r' ', s)
         return s
-    
-    def writeTotxt(self,destination,data):
+
+    def writeTotxt(self, destination, data):
         with open(f'{destination}', 'w') as f:
             for line in data:
-                 f.write(f"{line}\n")
+                f.write(f"{line}\n")
+

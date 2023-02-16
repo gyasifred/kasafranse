@@ -52,7 +52,7 @@ class BuildDataset:
         return train_dataset, val_dataset
 
 
-class Translate:
+class OpusDirectTranslate:
     '''Translate from source language to target language
     Args:
     param opus_mt_transformer: Path to the pre-trained OPUS-MT
@@ -61,12 +61,12 @@ class Translate:
     param to_console: specify if you want the output printed to the console
     '''
 
-    def __init__(self, opus_mt_transformer):
-        self.model_name = opus_mt_transformer
+    def __init__(self):
+        pass
 
-    def translate(self, file, to_console=False, output="translate.txt"):
-        tokenizer = MarianTokenizer.from_pretrained(self.model_name)
-        model = MarianMTModel.from_pretrained(self.model_name)
+    def translate(self, opus_model, file, to_console=False, output="translate.txt"):
+        tokenizer = MarianTokenizer.from_pretrained(opus_model)
+        model = MarianMTModel.from_pretrained(opus_model)
 
         if to_console == True:
             # Open test file and read lines
@@ -98,7 +98,7 @@ class Translate:
             return preprocessor.writeTotxt(output, lines)
 
 
-class OpusPivot:
+class OpusPivotTranslate:
     '''Translate with a cascading of two OPUS-MT model 
     Args:
     param translator_1: Provide the path to the first OPUS-MT model
@@ -108,15 +108,14 @@ class OpusPivot:
     param to_console: specify if you want the output printed to the console
     '''
 
-    def __init__(self, translator_1, translator_2):
-        self.translator_1 = translator_1
-        self.translator_2 = translator_2
+    def __init__(self):
+        pass
 
-    def translate(self, file, to_console=False, output="translate.txt"):
-        tokenizer_1 = MarianTokenizer.from_pretrained(self.translator_1)
-        model_1 = MarianMTModel.from_pretrained(self.translator_1)
-        tokenizer_2 = MarianTokenizer.from_pretrained(self.translator_2)
-        model_2 = MarianMTModel.from_pretrained(self.translator_2)
+    def translate(self, opus_model_1, opus_model_2,file, to_console=False, output="translate.txt"):
+        tokenizer_1 = MarianTokenizer.from_pretrained(opus_model_1)
+        model_1 = MarianMTModel.from_pretrained(opus_model_1)
+        tokenizer_2 = MarianTokenizer.from_pretrained(opus_model_2)
+        model_2 = MarianMTModel.from_pretrained(opus_model_2)
 
         if to_console == True:
             # Open test file and read lines
@@ -158,95 +157,3 @@ class OpusPivot:
                     t, skip_special_tokens=True) for t in translated]
                 lines.append(str(translated)[1:-1][1:-1])
             return preprocessor.writeTotxt(output, lines)
-
-
-class Bleu():
-    def __init__(self, translator, tokenizer):
-        self.translator = translator
-        self.tokenizer = tokenizer
-
-    def get_bleuscore(self, testfile, referencefile, smothingfunction=None):
-        if type(testfile) == str and type(referencefile) == str:
-            # Open test file and read lines
-            f = open(testfile, "r")
-            hypothesis = f.readlines()
-            f.close()
-            # open refernce file and read lines
-            f = open(referencefile, "r")
-            reference = f.readlines()
-            f.close()
-        elif type(testfile) == list and type(referencefile) == list:
-            hypothesis = testfile
-            reference = referencefile
-        else:
-            print(f'File must be txt or python list')
-
-        # check the length of our input sentence
-        length = len(hypothesis)
-        bleu_total = 0
-        weights = (0.58, 0, 0, 0)
-        for i in range(length):
-            hypothesis[i] = hypothesis[i]
-            reference[i] = reference[i]
-            groundtruth = reference[i].lower().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                .replace(" ) ", ") ").replace(" , ", ", ").split()
-            groundtruth = [groundtruth]
-
-            translated_text = self.translator.generate(
-                **self.tokenizer(hypothesis[i], return_tensors="pt", padding=True))
-            translated = [self.tokenizer.decode(
-                t, skip_special_tokens=True) for t in translated_text]
-            candidate = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                .replace(" ) ", ") ").replace(" , ", ", ")
-            candidate = candidate.lower().split()
-            bleu = sentence_bleu(
-                groundtruth, candidate, weights, smoothing_function=smothingfunction,
-                auto_reweigh=True)
-            bleu_total += bleu
-
-        return f'BLEU SCORE: {bleu_total/length:.2f}'
-
-
-class sacrebleu():
-    '''Estimate the SacreBLEU score
-    Args:
-    translator: Path to the Opus-mt transformer
-    tokenizer: Path to the opus-mt transformer tokenizer
-    '''
-
-    def __init__(self, translator, tokenizer):
-        self.translator = translator
-        self.tokenizer = tokenizer
-
-    def get_bleuscore(self, testfile, referencefile):
-
-        # Open test file and read translate
-        preds = []
-        with open(testfile) as pred:
-            for line in pred:
-                line = line.strip()
-                line = self.translator.generate(
-                    **self.tokenizer(line, return_tensors="pt", padding=True))
-                translated = [self.tokenizer.decode(
-                    t, skip_special_tokens=True) for t in line]
-                candidate = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                    .replace(" ) ", ") ").replace(" , ", ", ")
-                preds.append(candidate.lower())
-
-        refs = []
-        with open(referencefile) as test:
-            for line in test:
-                line = line.strip().replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                    .replace(" ) ", ") ").replace(" , ", ", ")
-                refs.append(line.lower())
-        refs = [refs]
-        bleu = sacrebleu.corpus_bleu(preds, refs, smooth_method="add-k",
-                                     force=False,
-                                     lowercase=True,
-                                     tokenize="intl",
-                                     use_effective_order=True)
-        return f'BLEU SCORE: {bleu.score:.2f}'
