@@ -51,7 +51,7 @@ class BLEU():
         return f'2-GRAMS: {bleu_total[0]/length:.2f}', f'3-GRAMS: {bleu_total[1]/length:.2f}', f'4-GRAMS: {bleu_total[2]/length:.2f}'
 
 
-class BleuScore():
+class AzunreBLEU():
     '''Estimate BLEU score as instantiated by Azunre et al. (2021)'''
     def __init__(self):
         pass
