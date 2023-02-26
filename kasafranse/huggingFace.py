@@ -59,12 +59,12 @@ class OpusDirectTranslate:
     param to_console: specify if you want the output printed to the console
     '''
 
-    def __init__(self, opus_mt_transformer):
-        self.model_name = opus_mt_transformer
-
-    def translate(self, file, to_console=False, output="translate.txt"):
-        tokenizer = MarianTokenizer.from_pretrained(self.model_name)
-        model = MarianMTModel.from_pretrained(self.model_name)
+    def __init__(self):
+        pass
+        
+    def translate(self, mt_model,file, to_console=False, output="translate.txt"):
+        tokenizer = MarianTokenizer.from_pretrained(mt_model)
+        model = MarianMTModel.from_pretrained(mt_model)
 
         if to_console == True:
             # Open test file and read lines
@@ -114,15 +114,14 @@ class OpusPivotTranslate:
     param to_console: specify if you want the output printed to the console
     '''
 
-    def __init__(self, translator_1, translator_2):
-        self.translator_1 = translator_1
-        self.translator_2 = translator_2
-
-    def translate(self, file, to_console=False, output="translate.txt"):
-        tokenizer_1 = MarianTokenizer.from_pretrained(self.translator_1)
-        model_1 = MarianMTModel.from_pretrained(self.translator_1)
-        tokenizer_2 = MarianTokenizer.from_pretrained(self.translator_2)
-        model_2 = MarianMTModel.from_pretrained(self.translator_2)
+    def __init__(self):
+        pass
+        
+    def translate(self,mt_model_1, mt_model_2, file, to_console=False, output="translate.txt"):
+        tokenizer_1 = MarianTokenizer.from_pretrained(mt_model_1)
+        model_1 = MarianMTModel.from_pretrained(mt_model_1)
+        tokenizer_2 = MarianTokenizer.from_pretrained(mt_model_2)
+        model_2 = MarianMTModel.from_pretrained(mt_model_2)
 
         if to_console == True:
             # Open test file and read lines
