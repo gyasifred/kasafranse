@@ -1,11 +1,9 @@
-from kasafranse.preprocessing import Preprocessing
 from transformers import MarianMTModel, MarianTokenizer
-from nltk.translate.bleu_score import sentence_bleu
-import numpy as np
 import pandas as pd
 from datasets import Dataset
-import sacrebleu
 from datasets import load_dataset
+from kasafranse.preprocessing import Preprocessing
+
 
 preprocessor = Preprocessing()
 
@@ -61,12 +59,12 @@ class OpusDirectTranslate:
     param to_console: specify if you want the output printed to the console
     '''
 
-    def __init__(self):
-        pass
+    def __init__(self, opus_mt_transformer):
+        self.model_name = opus_mt_transformer
 
-    def translate(self, opus_model, file, to_console=False, output="translate.txt"):
-        tokenizer = MarianTokenizer.from_pretrained(opus_model)
-        model = MarianMTModel.from_pretrained(opus_model)
+    def translate(self, file, to_console=False, output="translate.txt"):
+        tokenizer = MarianTokenizer.from_pretrained(self.model_name)
+        model = MarianMTModel.from_pretrained(self.model_name)
 
         if to_console == True:
             # Open test file and read lines
@@ -74,13 +72,18 @@ class OpusDirectTranslate:
             src_text = f.readlines()
             f.close()
             for i in src_text:
-                print(f'Source: {i}')
+                src = i.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
+                print(f'Source: {src.strip().capitalize()}')
                 translated = model.generate(
-                    **tokenizer(i, return_tensors="pt", padding=True))
+                    **tokenizer(i.strip(), return_tensors="pt", padding=True))
                 translated = [tokenizer.decode(
                     t, skip_special_tokens=True) for t in translated]
-                translated = str(translated)[1:-1][1:-1]
-                print(f'Target: {translated}')
+                translated = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
+                print(f'Target: {translated.strip().capitalize()}')
                 print()
 
         else:
@@ -91,10 +94,13 @@ class OpusDirectTranslate:
             lines = []
             for i in src_text:
                 translated = model.generate(
-                    **tokenizer(i, return_tensors="pt", padding=True))
+                    **tokenizer(i.strip(), return_tensors="pt", padding=True))
                 translated = [tokenizer.decode(
                     t, skip_special_tokens=True) for t in translated]
-                lines.append(str(translated)[1:-1][1:-1])
+                translated = str(translated)[1:-1][1:-1].replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
+                lines.append(translated.strip().capitalize())
             return preprocessor.writeTotxt(output, lines)
 
 
@@ -108,14 +114,15 @@ class OpusPivotTranslate:
     param to_console: specify if you want the output printed to the console
     '''
 
-    def __init__(self):
-        pass
+    def __init__(self, translator_1, translator_2):
+        self.translator_1 = translator_1
+        self.translator_2 = translator_2
 
-    def translate(self, opus_model_1, opus_model_2,file, to_console=False, output="translate.txt"):
-        tokenizer_1 = MarianTokenizer.from_pretrained(opus_model_1)
-        model_1 = MarianMTModel.from_pretrained(opus_model_1)
-        tokenizer_2 = MarianTokenizer.from_pretrained(opus_model_2)
-        model_2 = MarianMTModel.from_pretrained(opus_model_2)
+    def translate(self, file, to_console=False, output="translate.txt"):
+        tokenizer_1 = MarianTokenizer.from_pretrained(self.translator_1)
+        model_1 = MarianMTModel.from_pretrained(self.translator_1)
+        tokenizer_2 = MarianTokenizer.from_pretrained(self.translator_2)
+        model_2 = MarianMTModel.from_pretrained(self.translator_2)
 
         if to_console == True:
             # Open test file and read lines
@@ -123,19 +130,24 @@ class OpusPivotTranslate:
             src_text = f.readlines()
             f.close()
             for i in src_text:
-                print(f'Source: {i}')
+                src = i.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
+                print(f'Source: {src.strip().capitalize()}')
                 translated = model_1.generate(
                     **tokenizer_1(i, return_tensors="pt", padding=True))
                 translated = [tokenizer_1.decode(
                     t, skip_special_tokens=True) for t in translated]
                 translated = str(translated)[1:-1][1:-1]
-                print(f'Pivot: {translated}')
+                print(f'Pivot: {translated.strip().capitalize()}')
                 translated = model_2.generate(
                     **tokenizer_2(translated, return_tensors="pt", padding=True))
                 translated = [tokenizer_2.decode(
                     t, skip_special_tokens=True) for t in translated]
-                translated = str(translated)[1:-1][1:-1]
-                print(f'Target: {translated}')
+                translated = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
+                print(f'Target: {translated.strip().capitalize()}')
                 print()
 
         else:
@@ -155,5 +167,8 @@ class OpusPivotTranslate:
                     **tokenizer_2(translated, return_tensors="pt", padding=True))
                 translated = [tokenizer_2.decode(
                     t, skip_special_tokens=True) for t in translated]
-                lines.append(str(translated)[1:-1][1:-1])
+                translated = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+                    .replace(" ) ", ") ").replace(" , ", ", ")
+                lines.append(str(translated)[1:-1][1:-1].strip().capitalize())
             return preprocessor.writeTotxt(output, lines)
