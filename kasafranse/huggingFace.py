@@ -85,10 +85,10 @@ class OpusPivotTranslate:
     def __init__(self, opus_model_1, opus_model_2):
         self.mt_model_1 = opus_model_1
         self.mt_model_2 = opus_model_2
-        tokenizer_1 = MarianTokenizer.from_pretrained(self.mt_model_1)
-        model_1 = MarianMTModel.from_pretrained(self.mt_model_1)
-        tokenizer_2 = MarianTokenizer.from_pretrained(self.mt_model_2)
-        model_2 = MarianMTModel.from_pretrained(self.mt_model_2)
+        self.tokenizer_1 = MarianTokenizer.from_pretrained(self.mt_model_1)
+        self.model_1 = MarianMTModel.from_pretrained(self.mt_model_1)
+        self.tokenizer_2 = MarianTokenizer.from_pretrained(self.mt_model_2)
+        self.model_2 = MarianMTModel.from_pretrained(self.mt_model_2)
 
     def translate(self, text):
 
