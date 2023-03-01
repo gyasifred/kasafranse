@@ -53,121 +53,55 @@ class BuildDataset:
 class OpusDirectTranslate:
     '''Translate from source language to target language
     Args:
-    param opus_mt_transformer: Path to the pre-trained OPUS-MT
-    param file: Path to the document to be translated
-    param output: Specify the ouput directory for the final ouput
-    param to_console: specify if you want the output printed to the console
+    param opus_model: Path to the pre-trained OPUS-MT
+    param text: The text to be translated
+
     '''
 
-    def __init__(self):
-        pass
-        
-    def translate(self, mt_model,file, to_console=False, output="translate.txt"):
-        tokenizer = MarianTokenizer.from_pretrained(mt_model)
-        model = MarianMTModel.from_pretrained(mt_model)
+    def __init__(self, opus_model):
+        self.opus_model = opus_model
+        self.tokenizer = MarianTokenizer.from_pretrained(self.opus_model)
+        self.model = MarianMTModel.from_pretrained(self.opus_model)
 
-        if to_console == True:
-            # Open test file and read lines
-            f = open(file, "r")
-            src_text = f.readlines()
-            f.close()
-            for i in src_text:
-                src = i.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                    .replace(" ) ", ") ").replace(" , ", ", ")
-                print(f'Source: {src.strip().capitalize()}')
-                translated = model.generate(
-                    **tokenizer(i.strip(), return_tensors="pt", padding=True))
-                translated = [tokenizer.decode(
-                    t, skip_special_tokens=True) for t in translated]
-                translated = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                    .replace(" ) ", ") ").replace(" , ", ", ")
-                print(f'Target: {translated.strip().capitalize()}')
-                print()
-
-        else:
-            # Open test file and read lines
-            f = open(file, "r")
-            src_text = f.readlines()
-            f.close()
-            lines = []
-            for i in src_text:
-                translated = model.generate(
-                    **tokenizer(i.strip(), return_tensors="pt", padding=True))
-                translated = [tokenizer.decode(
-                    t, skip_special_tokens=True) for t in translated]
-                translated = str(translated)[1:-1][1:-1].replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                    .replace(" ) ", ") ").replace(" , ", ", ")
-                lines.append(translated.strip().capitalize())
-            return preprocessor.writeTotxt(output, lines)
+    def translate(self, text):
+        translated = self.model.generate(
+            **self.tokenizer(text.strip(), return_tensors="pt", padding=True))
+        translated = [self.tokenizer.decode(
+            t, skip_special_tokens=True) for t in translated]
+        translated = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+            .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+            .replace(" ) ", ") ").replace(" , ", ", ")
+        return translated
 
 
 class OpusPivotTranslate:
     '''Translate with a cascading of two OPUS-MT model 
     Args:
-    param translator_1: Provide the path to the first OPUS-MT model
-    param translator_2: Provide the path to the second OPUS-MT model
-    param file: Path to the document to be translated
-    param output: Specify the ouput directory for the final ouput
-    param to_console: specify if you want the output printed to the console
+    param opus_model_1: Provide the path to the first OPUS-MT model
+    param opus_model_1: Provide the path to the second OPUS-MT model
+    param text: The text to be translated
     '''
 
-    def __init__(self):
-        pass
-        
-    def translate(self,mt_model_1, mt_model_2, file, to_console=False, output="translate.txt"):
-        tokenizer_1 = MarianTokenizer.from_pretrained(mt_model_1)
-        model_1 = MarianMTModel.from_pretrained(mt_model_1)
-        tokenizer_2 = MarianTokenizer.from_pretrained(mt_model_2)
-        model_2 = MarianMTModel.from_pretrained(mt_model_2)
+    def __init__(self, opus_model_1, opus_model_2):
+        self.mt_model_1 = opus_model_1
+        self.mt_model_2 = opus_model_2
+        tokenizer_1 = MarianTokenizer.from_pretrained(self.mt_model_1)
+        model_1 = MarianMTModel.from_pretrained(self.mt_model_1mt_model_1)
+        tokenizer_2 = MarianTokenizer.from_pretrained(self.mt_model_2)
+        model_2 = MarianMTModel.from_pretrained(self.mt_model_2)
 
-        if to_console == True:
-            # Open test file and read lines
-            f = open(file, "r")
-            src_text = f.readlines()
-            f.close()
-            for i in src_text:
-                src = i.replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                    .replace(" ) ", ") ").replace(" , ", ", ")
-                print(f'Source: {src.strip().capitalize()}')
-                translated = model_1.generate(
-                    **tokenizer_1(i, return_tensors="pt", padding=True))
-                translated = [tokenizer_1.decode(
-                    t, skip_special_tokens=True) for t in translated]
-                translated = str(translated)[1:-1][1:-1]
-                print(f'Pivot: {translated.strip().capitalize()}')
-                translated = model_2.generate(
-                    **tokenizer_2(translated, return_tensors="pt", padding=True))
-                translated = [tokenizer_2.decode(
-                    t, skip_special_tokens=True) for t in translated]
-                translated = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                    .replace(" ) ", ") ").replace(" , ", ", ")
-                print(f'Target: {translated.strip().capitalize()}')
-                print()
+    def translate(self, text):
 
-        else:
-            # Open test file and read lines
-            f = open(file, "r")
-            src_text = f.readlines()
-            f.close()
-            lines = []
-            for i in src_text:
-                translated = model_1.generate(
-                    **tokenizer_1(i, return_tensors="pt", padding=True))
-                translated = [tokenizer_1.decode(
-                    t, skip_special_tokens=True) for t in translated]
-                translated = str(translated)[1:-1][1:-1]
-
-                translated = model_2.generate(
-                    **tokenizer_2(translated, return_tensors="pt", padding=True))
-                translated = [tokenizer_2.decode(
-                    t, skip_special_tokens=True) for t in translated]
-                translated = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
-                    .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
-                    .replace(" ) ", ") ").replace(" , ", ", ")
-                lines.append(str(translated)[1:-1][1:-1].strip().capitalize())
-            return preprocessor.writeTotxt(output, lines)
+        translated = self.model_1.generate(
+            **self.tokenizer_1(text, return_tensors="pt", padding=True))
+        translated = [self.tokenizer_1.decode(
+            t, skip_special_tokens=True) for t in translated]
+        translated = str(translated)[1:-1][1:-1]
+        translated = self.model_2.generate(
+            **self.tokenizer_2(translated, return_tensors="pt", padding=True))
+        translated = [self.tokenizer_2.decode(
+            t, skip_special_tokens=True) for t in translated]
+        translated = str(translated)[1:-1][1:-1].replace(" ' ", "'").replace(" .", ".").replace(" ?", "?").replace(" !", "!")\
+            .replace(' " ', '" ').replace(' "', '"').replace(" : ", ": ").replace(" ( ", " (")\
+            .replace(" ) ", ") ").replace(" , ", ", ")
+        return translated
