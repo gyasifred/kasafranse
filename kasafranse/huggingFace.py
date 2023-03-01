@@ -1,9 +1,9 @@
 from transformers import MarianMTModel, MarianTokenizer
 import pandas as pd
 from datasets import Dataset
-from datasets import load_dataset
 from kasafranse.preprocessing import Preprocessing
-
+import warnings
+warnings.simplefilter('ignore')
 
 preprocessor = Preprocessing()
 
@@ -86,7 +86,7 @@ class OpusPivotTranslate:
         self.mt_model_1 = opus_model_1
         self.mt_model_2 = opus_model_2
         tokenizer_1 = MarianTokenizer.from_pretrained(self.mt_model_1)
-        model_1 = MarianMTModel.from_pretrained(self.mt_model_1mt_model_1)
+        model_1 = MarianMTModel.from_pretrained(self.mt_model_1)
         tokenizer_2 = MarianTokenizer.from_pretrained(self.mt_model_2)
         model_2 = MarianMTModel.from_pretrained(self.mt_model_2)
 
