@@ -1,38 +1,20 @@
-# Kasafranse
-Twi to French translation library/system.
+# Kasafranse: Twi to French Translation Library
 
-# Quickstart
-Install Kasafranse directly from online link:
+[![GitHub Stars](https://img.shields.io/github/stars/gyasifred/kasafranse)](https://github.com/gyasifred/kasafranse/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/gyasifred/kasafranse)](https://github.com/gyasifred/kasafranse/network/members)
+[![License](https://img.shields.io/github/license/gyasifred/kasafranse)](https://github.com/gyasifred/kasafranse/blob/main/LICENSE)
 
-1. `pip install git+https://github.com/gyasifred/kasafranse`
+Welcome to Kasafranse, a Python library for translating Twi text to French. 
 
-When editing Kasafranse locally, it is helpful to install from a local copy of Kasafranse instead:
+## Features
 
-1. `git clone https://github.com/gyasifred/kasafranse`
+- Direct Translation: Translate Twi to French using pre-trained OPUS-MT model.
+- Pivot Translation: Cascading translation using two OPUS-MT models.
+- Text Preprocessing: Normalize text by removing accents, handling punctuation.
+- Integration: Hugging Face Transformers and Google Cloud Translation API.
 
-2. `cd kasafranse`
+## Installation
 
-3. `pip install .`
-
-
-# Contributing
-Please first clone this repo to your local machine, using a command line tool such as Cygwin or Anaconda Prompt:
-
-`git clone https://github.com/gyasifred/kasafranse`
-
-Create a branch for your contributions, and check it out:
-
-1. `git branch <your-branch-name>`
-
-2. `git checkout <your-branch-name>`
-
-Try to pick a branch name that described what you are planning to add to the library, see current branch names in this repo for ideas.
-
-Write your code, test it and then push to your branch:
-
-1. `git push origin <your-branch-name>`
-
-Create a pull request using the online github repo page. 
-
-Never push changes to master!!!
-
+```bash
+pip install git+https://github.com/gyasifred/kasafranse
+```
